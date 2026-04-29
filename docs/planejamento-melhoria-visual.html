@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planejamento: Melhoria Visual PRN & Duplicidade</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121933;
+      --panel-2: #0f1530;
+      --line: rgba(255,255,255,0.08);
+      --text: #f4f7fb;
+      --muted: #a7b0c3;
+      --blue: #4ea3ff;
+      --green: #38c172;
+      --amber: #ffb020;
+      --red: #ff5d5d;
+      --purple: #9b7bff;
+      --cyan: #35d4ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(ellipse at top left, rgba(78,163,255,0.10), transparent 30%),
+        radial-gradient(ellipse at top right, rgba(155,123,255,0.08), transparent 26%),
+        linear-gradient(180deg, #09101e 0%, #0b1020 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 64px; }
+    
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, rgba(78,163,255,0.14), rgba(155,123,255,0.10));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 40px 36px;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      display: inline-block; padding: 8px 14px; border-radius: 999px;
+      background: rgba(255,255,255,0.06); color: #dce7ff;
+      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px;
+    }
+    h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.08; margin-bottom: 10px; }
+    h2 { font-size: 26px; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+    h3 { font-size: 19px; margin-bottom: 10px; }
+    h4 { font-size: 15px; margin-bottom: 8px; color: var(--blue); }
+    p { margin-bottom: 10px; color: var(--muted); }
+    strong { color: var(--text); }
+    code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; font-size: 13px; color: var(--cyan); }
+    
+    /* Grid */
+    .grid { display: grid; gap: 16px; }
+    .g2 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .g4 { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 900px) { .g2,.g3,.g4 { grid-template-columns: 1fr; } }
+    
+    /* Cards */
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012));
+      border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    }
+    .card-alt {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    }
+    .section { margin-top: 32px; }
+    
+    /* Pills & Tags */
+    .pill {
+      display: inline-block; margin: 3px 6px 0 0; padding: 6px 10px; border-radius: 999px;
+      font-size: 12px; background: rgba(255,255,255,0.06); color: #dce7ff;
+    }
+    .tag-p0 { background: rgba(255,93,93,0.14); color: #ffb8b8; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-p1 { background: rgba(255,176,32,0.14); color: #ffd07c; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-p2 { background: rgba(155,123,255,0.14); color: #ccbaff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-consensus { background: rgba(56,193,114,0.14); color: #84e2a9; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tag-div { background: rgba(78,163,255,0.14); color: #a0cfff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; border-radius: 16px; overflow: hidden; margin-top: 12px; }
+    thead th {
+      text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: #d8e1f3; background: rgba(255,255,255,0.04); padding: 13px 12px; border-bottom: 1px solid var(--line);
+    }
+    tbody td { padding: 13px 12px; border-bottom: 1px solid var(--line); color: var(--muted); vertical-align: top; font-size: 14px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    
+    /* Flow / Steps */
+    .flow { display: grid; gap: 8px; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; }
+    @media (max-width: 1100px) { .flow { grid-template-columns: 1fr; } .flow-arrow { transform: rotate(90deg); } }
+    .flow-box {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 16px; text-align: center; min-width: 0;
+    }
+    .flow-arrow { color: var(--muted); font-size: 22px; font-weight: 700; text-align: center; }
+    
+    /* Accordion-like sections */
+    .agent-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 24px; margin-bottom: 16px;
+    }
+    .agent-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    .agent-title { font-size: 18px; font-weight: 700; }
+    .agent-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; }
+    
+    /* Prompt box */
+    .prompt-box {
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(78,163,255,0.2); border-radius: 12px;
+      padding: 16px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;
+      color: #cce7ff; white-space: pre-wrap; margin-top: 12px;
+    }
+    
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .d-blue { background: var(--blue); }
+    .d-green { background: var(--green); }
+    .d-amber { background: var(--amber); }
+    .d-red { background: var(--red); }
+    .d-purple { background: var(--purple); }
+    .d-cyan { background: var(--cyan); }
+    
+    /* Notes */
+    .note {
+      border-left: 4px solid var(--blue); padding: 14px 16px;
+      background: rgba(78,163,255,0.08); border-radius: 0 12px 12px 0; color: #dbe8ff; margin: 12px 0;
+    }
+    .note-amber {
+      border-left: 4px solid var(--amber); padding: 14px 16px;
+      background: rgba(255,176,32,0.08); border-radius: 0 12px 12px 0; color: #ffe9b8;
+    }
+    .note-red {
+      border-left: 4px solid var(--red); padding: 14px 16px;
+      background: rgba(255,93,93,0.08); border-radius: 0 12px 12px 0; color: #ffd0d0;
+    }
+    
+    /* Summary big numbers */
+    .big { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+    .mini { font-size: 13px; color: var(--muted); }
+    
+    /* Tabs-like subagent grid */
+    .subagent-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media (max-width: 1000px) { .subagent-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .subagent-grid { grid-template-columns: 1fr; } }
+    .subagent-card {
+      background: linear-gradient(135deg, rgba(78,163,255,0.1), rgba(155,123,255,0.08));
+      border: 1px solid rgba(78,163,255,0.2); border-radius: 18px; padding: 20px;
+    }
+    .subagent-card.duplicity {
+      background: linear-gradient(135deg, rgba(255,176,32,0.1), rgba(255,93,93,0.08));
+      border: 1px solid rgba(255,176,32,0.2);
+    }
+    
+    /* Consensus / Divergence cards */
+    .cd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .cd-grid { grid-template-columns: 1fr; } }
+    .consensus-card { background: rgba(56,193,114,0.06); border: 1px solid rgba(56,193,114,0.2); border-radius: 16px; padding: 18px; }
+    .divergence-card { background: rgba(78,163,255,0.06); border: 1px solid rgba(78,163,255,0.2); border-radius: 16px; padding: 18px; }
+    
+    /* Skill card */
+    .skill-card {
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; padding: 20px;
+    }
+    
+    /* List styles */
+    ul { padding-left: 20px; color: var(--muted); margin-bottom: 10px; }
+    li { margin-bottom: 6px; }
+    ul li::marker { color: var(--blue); }
+    
+    /* Anchor links */
+    .anchor { color: var(--blue); text-decoration: none; font-size: 13px; }
+    .anchor:hover { text-decoration: underline; }
+    
+    /* Section divider */
+    .divider {
+      height: 1px; background: var(--line); margin: 32px 0;
+    }
+    
+    /* Info box */
+    .info-box {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+      font-size: 14px; color: var(--muted); margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    
+    <!-- HERO -->
+    <section class="hero">
+      <div class="eyebrow">Planejamento Estratégico</div>
+      <h1>Melhoria Visual: PRN & Duplicidade</h1>
+      <p style="font-size: 18px; max-width: 800px;">
+        Plano completo para evoluir a experiência de <strong>Análise PRN</strong> e <strong>Análise de Duplicidade</strong> com foco em
+        <strong>usabilidade, hierarquia visual e tomada de decisão rápida</strong>.
+      </p>
+      <div class="legend" style="margin-top: 16px;">
+        <span><i class="dot d-blue"></i> PRN</span>
+        <span><i class="dot d-amber"></i> Duplicidade</span>
+        <span><i class="dot d-red"></i> Prioridade P0</span>
+        <span><i class="dot d-amber"></i> Prioridade P1</span>
+        <span><i class="dot d-purple"></i> Prioridade P2</span>
+        <span><i class="dot d-green"></i> Consenso</span>
+      </div>
+    </section>
+    
+    <!-- RESUMO EXECUTIVO -->
+    <section class="section">
+      <h2>1. Resumo Executivo do Plano</h2>
+      <div class="grid g4">
+        <div class="card">
+          <div class="big" style="color: var(--blue);">4</div>
+          <h3>Subagentes</h3>
+          <p>Dois para PRN (pré/pós) e dois para Duplicidade (pré/pós).</p>
+        </div>
+        <div class="card">
+          <div class="big" style="color: var(--amber);">2</div>
+          <h3>Skills</h3>
+          <p>Skills reutilizáveis para auditoria UX/UI e relatórios.</p>
+        </div>
+        <div class="card">
+          <div class="big" style="color: var(--red);">P0</div>
+          <h3>Foco Inicial</h3>
+          <p>Clareza de fluxo, leitura de risco e hierarquia visual.</p>
+        </div>
+        <div class="card">
+          <div class="big" style="color: var(--green);">1</div>
+          <h3>One-Shot</h3>
+          <p>Execução orquestrada para gerar relatório HTML único.</p>
+        </div>
+      </div>
+      
+      <div class="note" style="margin-top: 20px;">
+        <strong>Objetivo:</strong> Criar um relatório HTML consolidado onde os 4 subagentes expõem achados, prioridades e recomendações visuais para que a equipe de frontend possa entender e priorizar melhorias antes de qualquer implementação.
+      </div>
+    </section>
+    
+    <!-- ARQUITETURA DOS 4 SUBAGENTES -->
+    <section class="section">
+      <h2>2. Arquitetura dos 4 Subagentes</h2>
+      <p class="mini" style="margin-bottom: 16px;">Cada subagente foca em um estado específico de uma das duas páginas.</p>
+      
+      <div class="subagent-grid">
+        <!-- Subagente 1 -->
+        <div class="subagent-card">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(78,163,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white;">1</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px;">PRN Pré-Análise</div>
+              <div class="tag-p0" style="margin-top: 4px;">P0 Foco</div>
+            </div>
+          </div>
+          <p class="mini">Avalia: upload, loading, erro, histórico inicial.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Arquivos-chave:</strong><br/>
+            <code>prn-analysis.tsx</code><br/>
+            <code>prn-upload-form.tsx</code><br/>
+            <code>prn-states.tsx</code><br/>
+            <code>prn-history-table.tsx</code>
+          </div>
+        </div>
+        
+        <!-- Subagente 2 -->
+        <div class="subagent-card">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(78,163,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white;">2</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px;">PRN Pós-Análise</div>
+              <div class="tag-p0" style="margin-top: 4px;">P0 Foco</div>
+            </div>
+          </div>
+          <p class="mini">Avalia: resumo, cards, auditoria cruzada, tabs, detalhes.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Arquivos-chave:</strong><br/>
+            <code>prn-report-view.tsx</code><br/>
+            <code>prn-summary-cards.tsx</code><br/>
+            <code>prn-cross-analysis.tsx</code><br/>
+            <code>prn-details.tsx</code>
+          </div>
+        </div>
+        
+        <!-- Subagente 3 -->
+        <div class="subagent-card duplicity">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(255,176,32,0.2); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white;">3</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px;">Duplicidade Pré</div>
+              <div class="tag-p1" style="margin-top: 4px;">P1 Foco</div>
+            </div>
+          </div>
+          <p class="mini">Avalia: upload, histórico, fluxo inicial, carga cognitiva.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Arquivos-chave:</strong><br/>
+            <code>duplicity-analysis/index.tsx</code><br/>
+            <code>upload-section.tsx</code><br/>
+            <code>history-table.tsx</code>
+          </div>
+        </div>
+        
+        <!-- Subagente 4 -->
+        <div class="subagent-card duplicity">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(255,176,32,0.2); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white;">4</div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px;">Duplicidade Pós</div>
+              <div class="tag-p1" style="margin-top: 4px;">P1 Foco</div>
+            </div>
+          </div>
+          <p class="mini">Avalia: resultados, métricas, grupos, recomendações.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Arquivos-chave:</strong><br/>
+            <code>results-dashboard.tsx</code><br/>
+            <code>history-table.tsx</code>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- SKILLS -->
+    <section class="section">
+      <h2>3. Skills Estratégicas</h2>
+      <p class="mini" style="margin-bottom: 16px;">Skills compartilhadas que guiarão os subagentes.</p>
+      
+      <div class="grid g2">
+        <div class="skill-card">
+          <h4>Skill 1: ux-ui-auditoria-analitica</h4>
+          <p class="mini">Ensina o subagente a avaliar telas analíticas/operacionais.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>O que avaliar:</strong>
+            <ul style="margin-top: 8px;">
+              <li>Hierarquia visual e entendimento em 5 segundos</li>
+              <li>Clareza do CTA principal e microcopy</li>
+              <li>Estados: vazio, loading, erro, resultado</li>
+              <li>Densidade informacional e escaneabilidade</li>
+              <li>Contraste semântico e priorização de risco</li>
+              <li>Relação entre histórico e ação atual</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="skill-card">
+          <h4>Skill 2: relatorio-consolidacao-front</h4>
+          <p class="mini">Padroniza como o agente descreve melhorias para consolidação.</p>
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Formato de saída obrigatório:</strong>
+            <ul style="margin-top: 8px;">
+              <li>Schema fixo e linguagem objetiva</li>
+              <li>Sem código, sem genericidade</li>
+              <li>Problema + Evidência + Por que atrapalha</li>
+              <li>Recomendação + Prioridade (P0/P1/P2)</li>
+              <li>Impacto, esforço e referência de arquivo</li>
+              <li>JSON ou Markdown estruturado</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- PROMPTS DOS SUBAGENTES -->
+    <section class="section">
+      <h2>4. Prompts dos Subagentes</h2>
+      <p class="mini" style="margin-bottom: 16px;">Prompts estruturados para cada agente, pensados como engenheiro de IA.</p>
+      
+      <!-- Prompt 1 -->
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-title" style="color: var(--blue);">Subagente 1: PRN Pré-Análise</div>
+          <span class="agent-badge" style="background: rgba(78,163,255,0.14); color: #a0cfff;">PRÉ-ANÁLISE</span>
+        </div>
+        <div class="prompt-box">Você é um subagente de auditoria UX/UI para sistemas analíticos.
+
+Escopo:
+Analisar apenas a experiência de PRÉ-ANÁLISE da página "Análise PRN".
+
+Arquivos prioritários:
+- src/pages/prn-analysis.tsx
+- src/components/prn/prn-upload-form.tsx
+- src/components/prn/prn-states.tsx
+- src/components/prn/prn-history-table.tsx
+
+Objetivo:
+Identificar melhorias visuais e de usabilidade para que o operador entenda mais rápido:
+- o que precisa fazer
+- quais dados precisa subir
+- quando a análise está pronta para execução
+- como acompanhar loading, erro e histórico.
+
+Avalie:
+- clareza do fluxo, hierarquia visual, peso do CTA
+- microcopy, affordance de upload, percepção de progresso
+- estado vazio, estado de erro, relação com histórico
+
+Formato obrigatório de saída:
+1. Resumo executivo
+2. Leitura crítica da tela
+3. Melhorias priorizadas P0/P1/P2
+4. Impacto e esforço
+5. Recomendações por bloco da tela
+6. Riscos e perguntas abertas
+7. Referências de arquivo/componente</div>
+      </div>
+      
+      <!-- Prompt 2 -->
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-title" style="color: var(--blue);">Subagente 2: PRN Pós-Análise</div>
+          <span class="agent-badge" style="background: rgba(78,163,255,0.14); color: #a0cfff;">PÓS-ANÁLISE</span>
+        </div>
+        <div class="prompt-box">Você é um subagente de auditoria UX/UI para sistemas analíticos.
+
+Escopo:
+Analisar apenas a experiência de PÓS-ANÁLISE da página "Análise PRN".
+
+Arquivos prioritários:
+- src/components/prn/prn-report-view.tsx
+- src/components/prn/prn-summary-cards.tsx
+- src/components/prn/prn-cross-analysis.tsx
+- src/components/prn/prn-details.tsx
+
+Objetivo:
+Identificar melhorias visuais e estruturais para leitura rápida, priorização operacional e interpretação de risco.
+
+Avalie:
+- narrativa visual do topo e qualidade dos cards resumo
+- destaque de risco, organização das tabs, escaneabilidade da auditoria cruzada
+- filtros, tabela principal, leitura de categorias/recebimentos/contas/entidades
+- clareza de ação seguinte, exportação e rastreabilidade
+
+Formato obrigatório de saída:
+1. Resumo executivo
+2. Arquitetura visual atual
+3. Melhorias priorizadas P0/P1/P2
+4. Impacto e esforço
+5. Recomendações por bloco
+6. Lacunas de storytelling analítico
+7. Referências de arquivo/componente</div>
+      </div>
+      
+      <!-- Prompt 3 -->
+      <div class="agent-card" style="border-color: rgba(255,176,32,0.3);">
+        <div class="agent-header">
+          <div class="agent-title" style="color: var(--amber);">Subagente 3: Duplicidade Pré-Análise</div>
+          <span class="agent-badge" style="background: rgba(255,176,32,0.14); color: #ffd07c;">PRÉ-ANÁLISE</span>
+        </div>
+        <div class="prompt-box">Você é um subagente de auditoria UX/UI para sistemas analíticos.
+
+Escopo:
+Analisar apenas a experiência de PRÉ-ANÁLISE da página "Análise de Duplicidade".
+
+Arquivos prioritários:
+- src/pages/duplicity-analysis/index.tsx
+- src/pages/duplicity-analysis/components/upload-section.tsx
+- src/pages/duplicity-analysis/components/history-table.tsx
+
+Objetivo:
+Identificar melhorias para tornar o início do fluxo mais claro, seguro e amigável para o operador.
+
+Avalie:
+- hierarquia da página e clareza do primeiro passo
+- força do CTA principal e instrução para upload
+- validação de arquivo e percepção de processamento
+- relação entre upload atual e histórico
+- peso visual do histórico e filtros
+- presença de ações destrutivas
+
+Formato obrigatório de saída:
+1. Resumo executivo
+2. Leitura crítica da tela
+3. Melhorias priorizadas P0/P1/P2
+4. Impacto e esforço
+5. Recomendações por bloco
+6. Riscos e perguntas abertas
+7. Referências de arquivo/componente</div>
+      </div>
+      
+      <!-- Prompt 4 -->
+      <div class="agent-card" style="border-color: rgba(255,176,32,0.3);">
+        <div class="agent-header">
+          <div class="agent-title" style="color: var(--amber);">Subagente 4: Duplicidade Pós-Análise</div>
+          <span class="agent-badge" style="background: rgba(255,176,32,0.14); color: #ffd07c;">PÓS-ANÁLISE</span>
+        </div>
+        <div class="prompt-box">Você é um subagente de auditoria UX/UI para sistemas analíticos.
+
+Escopo:
+Analisar apenas a experiência de PÓS-ANÁLISE da página "Análise de Duplicidade".
+
+Arquivos prioritários:
+- src/pages/duplicity-analysis/index.tsx
+- src/pages/duplicity-analysis/components/results-dashboard.tsx
+- src/pages/duplicity-analysis/components/history-table.tsx
+
+Objetivo:
+Identificar melhorias visuais para facilitar entendimento rápido do resultado, classificação de risco e revisão manual.
+
+Avalie:
+- veredito visual da análise e semântica de risco
+- hierarquia dos KPIs e organização dos blocos de categoria
+- legibilidade das tabelas e explicação do motivo da suspeita
+- priorização do que revisar primeiro e relação com histórico
+- próximos passos operacionais
+
+Formato obrigatório de saída:
+1. Resumo executivo
+2. Leitura crítica da experiência
+3. Melhorias priorizadas P0/P1/P2
+4. Impacto e esforço
+5. Recomendações por bloco
+6. Lacunas de sinalização e explicação
+7. Referências de arquivo/componente</div>
+      </div>
+    </section>
+    
+    <!-- ONE-SHOT EXECUTION PLAN -->
+    <section class="section">
+      <h2>5. Plano de Execução One-Shot</h2>
+      <div class="note">
+        <strong>Estratégia:</strong> O orquestrador injeta contexto global, aciona 4 subagentes especializados, normaliza saídas no mesmo schema e consolida tudo em um relatório HTML único.
+      </div>
+      
+      <div class="flow" style="margin-top: 20px;">
+        <div class="flow-box">
+          <h4>1. Orquestrador</h4>
+          <p class="mini">Injeta contexto e objetivo</p>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-box">
+          <h4>2. Subagentes</h4>
+          <p class="mini">4 agentes analisam escopos</p>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-box">
+          <h4>3. Normalização</h4>
+          <p class="mini">Mesmo schema de saída</p>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-box">
+          <h4>4. Consolidação</h4>
+          <p class="mini">Deduplicação e ranking</p>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-box" style="border-color: rgba(56,193,114,0.3);">
+          <h4 style="color: var(--green);">5. Relatório HTML</h4>
+          <p class="mini">Página única com tudo</p>
+        </div>
+      </div>
+      
+      <div class="grid g2" style="margin-top: 20px;">
+        <div class="card">
+          <h4>Regras do Orquestrador</h4>
+          <ul>
+            <li>Não propor código</li>
+            <li>Focar em UX/UI e usabilidade</li>
+            <li>Priorizar leitura rápida e uso amigável</li>
+            <li>Indicar impacto, esforço e prioridade</li>
+            <li>Referenciar arquivos/componentes</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Schema de Saída Único</h4>
+          <div class="prompt-box" style="font-size: 12px; margin-top: 8px;">
+{
+  "agent_id": "prn_pre_analysis",
+  "screen": "Análise PRN",
+  "scope": "pre-analise",
+  "summary": ["..."],
+  "findings": [
+    {
+      "title": "Problema",
+      "priority": "P0",
+      "impact": "alto",
+      "effort": "medio",
+      "why_it_matters": "...",
+      "recommendation": "...",
+      "affected_blocks": ["header"],
+      "file_refs": ["src/pages/prn-analysis.tsx"]
+    }
+  ],
+  "block_recommendations": [...],
+  "open_questions": [...]
+}          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- BLUEPRINT DO RELATÓRIO FINAL -->
+    <section class="section">
+      <h2>6. Blueprint: Relatório HTML Final</h2>
+      <p class="mini" style="margin-bottom: 16px;">Estrutura da página que os 4 subagentes ajudarão a desenhar antes da implementação.</p>
+      
+      <div class="card" style="margin-top: 16px;">
+        <h4>Estrutura das Seções (Ordem de Leitura)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Seção</th>
+              <th>Conteúdo</th>
+              <th>Prioridade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Hero do Relatório</td>
+              <td>Objetivo, escopo, datas, subagentes</td>
+              <td><span class="tag-consensus">Visual</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Resumo Executivo Consolidado</td>
+              <td>Principais achados, síntese geral</td>
+              <td><span class="tag-p0">P0</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Ranking Geral de Prioridades</td>
+              <td>Tabela unificada P0/P1/P2</td>
+              <td><span class="tag-p0">P0</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Subagente 1 - PRN Pré</td>
+              <td>Relatório completo do agente 1</td>
+              <td><span class="tag-p1">P1</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Subagente 2 - PRN Pós</td>
+              <td>Relatório completo do agente 2</td>
+              <td><span class="tag-p1">P1</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>Subagente 3 - Duplicidade Pré</td>
+              <td>Relatório completo do agente 3</td>
+              <td><span class="tag-p1">P1</span></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>Subagente 4 - Duplicidade Pós</td>
+              <td>Relatório completo do agente 4</td>
+              <td><span class="tag-p1">P1</span></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>Matriz Cruzada de Melhorias</td>
+              <td>Comparação entre agentes, consensos e divergências</td>
+              <td><span class="tag-p0">P0</span></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>Próximos Passos</td>
+              <td>Plano de implementação frontend</td>
+              <td><span class="tag-p2">P2</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="grid g2" style="margin-top: 16px;">
+        <div class="card">
+          <h4>Elementos Visuais do Relatório</h4>
+          <ul>
+            <li>Cards de resumo executivo</li>
+            <li>Matriz Tela x Estado</li>
+            <li>Ranking de prioridades</li>
+            <li>Consensos e divergências</li>
+            <li>Blueprint de redesign (wireframes textuais)</li>
+            <li>Âncoras e navegação interna</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Objetivo da Página HTML</h4>
+          <div class="note" style="margin-top: 10px;">
+            Permitir que a equipe entenda exatamente:
+            <ul style="margin-top: 8px;">
+              <li>O que os subagentes encontraram</li>
+              <li>Quais são os maiores problemas</li>
+              <li>Em quais telas/estados</li>
+              <li>O que é consenso entre agentes</li>
+              <li>O que priorizar no frontend</li>
+              <li>A direção visual antes de implementar</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CONSENSOS E DIVERGÊNCIAS -->
+    <section class="section">
+      <h2>7. Consensos e Divergências Esperadas</h2>
+      <p class="mini" style="margin-bottom: 16px;">O que já identificamos como provável consenso e onde podem surgir debates.</p>
+      
+      <div class="cd-grid">
+        <div class="consensus-card">
+          <h4 style="color: var(--green);">Consensos Prováveis</h4>
+          <ul style="margin-top: 10px;">
+            <li><span class="tag-p0">P0</span> Fluxo inicial pouco guiado</li>
+            <li><span class="tag-p0">P0</span> Falta de veredito executivo no pós-análise</li>
+            <li><span class="tag-p0">P0</span> KPIs sem hierarquia clara de decisão</li>
+            <li><span class="tag-p1">P1</span> Histórico competindo com ação principal</li>
+            <li><span class="tag-p1">P1</span> Tabelas densas prejudicando leitura rápida</li>
+            <li><span class="tag-p1">P1</span> Carga cognitiva alta em pré-análise</li>
+            <li><span class="tag-p2">P2</span> Excesso de linguagem "premium/engine"</li>
+          </ul>
+        </div>
+        
+        <div class="divergence-card">
+          <h4 style="color: var(--blue);">Divergências Possíveis</h4>
+          <ul style="margin-top: 10px;">
+            <li><strong>Histórico:</strong> Protagonista ou apoio no pré-análise?</li>
+            <li><strong>Pós-análise:</strong> Priorizar "executivo" ou "detalhe analítico"?</li>
+            <li><strong>Reorganização:</strong> Hierarquia primeiro ou semântica primeiro?</li>
+            <li><strong>Densidade:</strong> Mais informação ou mais síntese?</li>
+            <li><strong>PRN vs Duplicidade:</strong> Tratar separado ou unificar padrões?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    
+    <!-- PERGUNTAS PARA DECISÃO -->
+    <section class="section">
+      <h2>8. Perguntas para Decisão</h2>
+      <p class="mini" style="margin-bottom: 16px;">Responder antes ou durante a leitura do relatório final.</p>
+      
+      <div class="card" style="margin-top: 16px;">
+        <div class="note-amber">
+          <strong>Decisões de Produto/UX:</strong>
+        </div>
+        <ul style="margin-top: 12px;">
+          <li>O histórico deve ser protagonista ou apoio no pré-análise?</li>
+          <li>O pós-análise deve priorizar "resultado executivo" ou "detalhe analítico"?</li>
+          <li>Vamos reorganizar primeiro a hierarquia visual ou primeiro a semântica dos blocos?</li>
+          <li>O foco inicial do frontend será PRN, Duplicidade ou ambos em paralelo?</li>
+          <li>Adotaremos um veredito de risco consolidado (Alto/Médio/Baixo) no topo?</li>
+          <li>As tabelas densas serão divididas em views ou filtradas por severidade?</li>
+          <li>O "motor de regras" e "ENGINE V2" serão mantidos ou simplificados?</li>
+        </ul>
+        
+        <div class="divider"></div>
+        
+        <div class="note" style="margin-top: 16px;">
+          <strong>Decisões de Engenharia:</strong>
+        </div>
+        <ul style="margin-top: 12px;">
+          <li>Usaremos os 4 subagentes em paralelo ou sequencialmente?</li>
+          <li>O schema de saída será JSON estrito ou Markdown estruturado?</li>
+          <li>O relatório final será estático ou terá interatividade leve (accordions)?</li>
+          <li>Vamos versionar os relatórios dos subagentes para comparar evolução?</li>
+        </ul>
+      </div>
+    </section>
+    
+    <!-- ANCHOR TO TOP -->
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="#" class="anchor">&#8593; Voltar ao topo</a>
+    </div>
+    
+    <!-- FOOTER -->
+    <div class="divider"></div>
+    <p class="mini" style="text-align: center;">
+      Planejamento criado para evolução de <strong>Análise PRN</strong> e <strong>Análise de Duplicidade</strong>.<br/>
+      Estrutura pensada para gerar um relatório HTML consolidado após execução dos 4 subagentes.
+    </p>
+  </div>
+</body>
+</html>
