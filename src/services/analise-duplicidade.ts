@@ -2,7 +2,7 @@ import { getSupabase } from '@/lib/supabase/client'
 
 const DUPLICITY_API_URL =
   import.meta.env.VITE_DUPLICITY_ANALYSIS_API_URL ||
-  'https://prndiag1.app.n8n.cloud/webhook/analise-duplicidade-process'
+  'https://apps-n8n.srofjl.easypanel.host/webhook/duplicidadeaaa'
 
 export interface AnalysisRecord {
   id: string

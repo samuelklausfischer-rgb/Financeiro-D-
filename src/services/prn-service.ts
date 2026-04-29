@@ -1,7 +1,7 @@
 import { getSupabase } from '@/lib/supabase/client'
 
 const PRN_API_URL =
-  import.meta.env.VITE_PRN_ANALYSIS_API_URL || 'https://n8n-h4xf.srv1623283.hstgr.cloud/webhook/prn/report'
+  import.meta.env.VITE_PRN_ANALYSIS_API_URL || 'https://apps-n8n.srofjl.easypanel.host/webhook/prn/report'
 
 const MAX_STORAGE_FILENAME_LENGTH = 120
 
