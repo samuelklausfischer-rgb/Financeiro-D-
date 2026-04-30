@@ -134,7 +134,7 @@ export function HistoryTable({
 
   return (
     <>
-      <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white shadow-xl">
+      <Card className="bg-zinc-900 border-white/10 text-white shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">Histórico de análises</CardTitle>
           <Button

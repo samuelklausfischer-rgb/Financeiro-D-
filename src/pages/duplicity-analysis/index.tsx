@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { UploadSection } from './components/upload-section'
-import { ResultsDashboard } from './components/results-dashboard'
+import { ResultsDashboard } from './components/dashboard'
 import { HistoryTable } from './components/history-table'
 import { getAnalise, type AnalysisRecord } from '@/services/analise-duplicidade'
 import { useToast } from '@/hooks/use-toast'
@@ -56,11 +56,10 @@ export default function DuplicityAnalysis() {
   }
 
   return (
-    <div className="relative flex-1 min-h-screen p-8 text-white overflow-hidden bg-black/40">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full mix-blend-screen filter blur-[120px] animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full mix-blend-screen filter blur-[120px] animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-pink-500/10 rounded-full mix-blend-screen filter blur-[120px] animate-pulse delay-2000" />
-
+    <div className="relative flex-1 min-h-screen p-8 text-white overflow-hidden bg-zinc-950">
+      <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-gradient-radial from-blue-900/20 to-transparent rounded-full" />
+      <div className="absolute bottom-0 right-1/4 w-[40rem] h-[40rem] bg-gradient-radial from-purple-900/20 to-transparent rounded-full" />
+      
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between space-y-2 mb-8">
           <div>
