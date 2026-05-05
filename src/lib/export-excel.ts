@@ -68,6 +68,10 @@ function styleUnitHeader(row: ExcelJS.Row, unit: string) {
   })
 }
 
+function styleFinanceNoteCell(cell: ExcelJS.Cell) {
+  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+}
+
 export async function generateAuditExcel(data: any) {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('Auditoria Detalhada')
@@ -134,6 +138,10 @@ export async function generateAuditExcel(data: any) {
           if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
           if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
         }
+
+        if (colNumber === 11) {
+          styleFinanceNoteCell(cell)
+        }
       })
 
       // Sub-linhas (Departamentos)
@@ -145,10 +153,13 @@ export async function generateAuditExcel(data: any) {
             formatBRL(dept.valor), 
             '', '', '', ''
           ])
-          deptRow.eachCell((cell) => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
-            cell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
-          })
+      deptRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
+        cell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
+        if (cell.col === 11) {
+          styleFinanceNoteCell(cell)
+        }
+      })
         }
       }
     }
@@ -164,7 +175,7 @@ export async function generateAuditExcel(data: any) {
   // Ajustes Finais
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 22 }
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 28 }
   ]
 
   const buffer = await workbook.xlsx.writeBuffer()
@@ -235,6 +246,10 @@ export async function generateGroupedAuditExcel(data: any) {
            if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
            if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
         }
+
+        if (colNum === 11) {
+          styleFinanceNoteCell(cell)
+        }
       })
     }
 
@@ -248,7 +263,7 @@ export async function generateGroupedAuditExcel(data: any) {
 
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 22 }
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 28 }
   ]
   
   const buffer = await workbook.xlsx.writeBuffer()
