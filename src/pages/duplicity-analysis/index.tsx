@@ -56,10 +56,7 @@ export default function DuplicityAnalysis() {
   }
 
   return (
-    <div className="relative flex-1 min-h-screen p-8 text-white overflow-hidden bg-zinc-950">
-      <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-gradient-radial from-blue-900/20 to-transparent rounded-full" />
-      <div className="absolute bottom-0 right-1/4 w-[40rem] h-[40rem] bg-gradient-radial from-purple-900/20 to-transparent rounded-full" />
-      
+    <div className="relative flex-1 min-h-screen p-8 text-white bg-[#09090b]">
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between space-y-2 mb-8">
           <div>

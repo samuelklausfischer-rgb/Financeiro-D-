@@ -74,11 +74,11 @@ export interface CockpitRow {
   unidade: string
   favorecido: string
   categoria: string
-  jan: number
   fev: number
   mar: number
+  abr: number
   atual: number
-  difVsMar: number
+  difVsAbr: number
   status: CockpitStatus
   tipoMatch: string
   qtdDepartamentos: number
@@ -103,9 +103,9 @@ export function catMatch(curCat: string, histCat: string): boolean {
 }
 
 export function calcStatus(dif: number, tipoMatch: string): CockpitStatus {
-  if (tipoMatch === 'Novo (sem historico)') return 'Novo'
   if (dif > 0.01) return 'Aumento'
   if (dif < -0.01) return 'Queda'
+  if (tipoMatch.includes('Novo')) return 'Novo'
   return 'Igual'
 }
 
@@ -114,20 +114,32 @@ function monthNum(code: string): number {
   return parts.length === 2 ? parseInt(parts[1], 10) : 0
 }
 
-function extractJanFevMar(meses: Record<string, number>): { jan: number; fev: number; mar: number } {
+function extractFevMarAbr(row: any): { fev: number; mar: number; abr: number } {
+  // 1. Prioridade para campos diretos (novo formato n8n V5)
+  if (typeof row.fev === 'number' || typeof row.mar === 'number' || typeof row.abr === 'number') {
+    return {
+      fev: Number(row.fev ?? 0),
+      mar: Number(row.mar ?? 0),
+      abr: Number(row.abr ?? 0)
+    }
+  }
+
+  // 2. Fallback para objeto meses (formato antigo/legado)
+  const meses: Record<string, number> = row.meses || {}
   const sorted = Object.entries(meses)
     .filter(([k]) => /^\d{4}-\d{2}$/.test(k))
     .sort(([a], [b]) => a.localeCompare(b))
 
-  const jan = sorted.find(([k]) => monthNum(k) === 1)?.[1] ?? 0
   const fev = sorted.find(([k]) => monthNum(k) === 2)?.[1] ?? 0
   const mar = sorted.find(([k]) => monthNum(k) === 3)?.[1] ?? 0
-  return { jan, fev, mar }
+  const abr = sorted.find(([k]) => monthNum(k) === 4)?.[1] ?? 0
+  return { fev, mar, abr }
 }
 
 export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
   const UNIT_LABELS: Record<string, string> = {
     prn_matriz: 'PRN MATRIZ',
+    MATRIZ: 'PRN MATRIZ',
     camboriu: 'CAMBORIU',
     palhoca: 'PALHOCA',
   }
@@ -136,18 +148,20 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
   return rows.map((row) => {
     const favorecido = ns(row.nome || row.favorecido || row.name || '')
     const categoria = ns(row.categoria || row.categoriaOriginal || '')
-    const meses: Record<string, number> = row.meses || {}
-    const { jan, fev, mar } = extractJanFevMar(meses)
-    const atual = Number(row.valorPago ?? row.valorDia ?? row.atual ?? 0)
-    const difVsMar = atual - mar
+    
+    // Extrai Fev/Mar/Abr (com suporte a n8n V5 e Legado)
+    const { fev, mar, abr } = extractFevMarAbr(row)
+    
+    const atual = Number(row.atual ?? row.valorPago ?? row.valorDia ?? 0)
+    const difVsAbr = typeof row.difVsAbr === 'number' ? row.difVsAbr : (atual - abr)
 
     let tipoMatch = row.tipoMatch || ''
     if (!tipoMatch) {
-      const temHistorico = row.temHistorico ?? (jan > 0 || fev > 0 || mar > 0)
+      const temHistorico = row.temHistorico ?? (fev > 0 || mar > 0 || abr > 0)
       tipoMatch = temHistorico ? 'Match exato (favorecido + categoria)' : 'Novo (sem historico)'
     }
 
-    const status = calcStatus(difVsMar, tipoMatch)
+    const status = (row.status as CockpitStatus) || calcStatus(difVsAbr, tipoMatch)
 
     const departamentos: Array<{ dept: string; valor: number }> = []
     if (Array.isArray(row.dailyLines)) {
@@ -155,24 +169,30 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
         const dept = ns(dl.departamento || dl.dept || '')
         if (dept) departamentos.push({ dept, valor: Number(dl.valor ?? 0) })
       }
+    } else if (Array.isArray(row.departamentos)) {
+      // Suporte ao formato novo do n8n que já envia departamentos
+      for (const d of row.departamentos) {
+        departamentos.push({ dept: ns(d.dept || d.departamento || ''), valor: Number(d.valor ?? 0) })
+      }
     } else if (row.departamento) {
       departamentos.push({ dept: ns(row.departamento), valor: atual })
     }
 
-    // Calcular media e varPct
-    const mesesValidos = [jan, fev, mar].filter(v => v > 0)
-    const media = mesesValidos.length > 0 ? (jan + fev + mar) / mesesValidos.length : 0
-    const varPct = mar > 0 ? ((atual - mar) / mar) * 100 : (atual > 0 ? 100 : 0)
+    // Calcular media e varPct (Média de Fev, Mar, Abr)
+    // Se o n8n já enviou, respeita o valor dele
+    const mesesValidos = [fev, mar, abr].filter(v => v > 0)
+    const media = typeof row.media === 'number' ? row.media : (mesesValidos.length > 0 ? (fev + mar + abr) / mesesValidos.length : 0)
+    const varPct = typeof row.varPct === 'number' ? row.varPct : (abr > 0 ? ((atual - abr) / abr) * 100 : (atual > 0 ? 100 : 0))
 
     return {
       unidade,
       favorecido,
       categoria,
-      jan,
       fev,
       mar,
+      abr,
       atual,
-      difVsMar,
+      difVsAbr,
       status,
       tipoMatch,
       qtdDepartamentos: departamentos.length,
@@ -194,11 +214,11 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
         unidade: 'CONSOLIDADO',
         favorecido: row.favorecido,
         categoria: row.categoria,
-        jan: row.jan,
         fev: row.fev,
         mar: row.mar,
+        abr: row.abr,
         atual: row.atual,
-        difVsMar: row.difVsMar,
+        difVsAbr: row.difVsAbr,
         status: row.status,
         tipoMatch: row.tipoMatch,
         qtdDepartamentos: 0,
@@ -209,33 +229,33 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
       })
     } else {
       const existing = map.get(key)!
-      existing.jan += row.jan
       existing.fev += row.fev
       existing.mar += row.mar
+      existing.abr += row.abr
       existing.atual += row.atual
-      existing.difVsMar = existing.atual - existing.mar
+      existing.difVsAbr = existing.atual - existing.abr
       
       if (row.tipoMatch === 'Novo (sem historico)') {
         existing.tipoMatch = 'Novo (sem historico)'
       }
-      existing.status = calcStatus(existing.difVsMar, existing.tipoMatch)
+      existing.status = calcStatus(existing.difVsAbr, existing.tipoMatch)
     }
   }
 
   for (const row of map.values()) {
-    const mesesValidos = [row.jan, row.fev, row.mar].filter(v => v > 0)
+    const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
     row.media = mesesValidos.length > 0 
-      ? Math.round(((row.jan + row.fev + row.mar) / mesesValidos.length) * 100) / 100 
+      ? Math.round(((row.fev + row.mar + row.abr) / mesesValidos.length) * 100) / 100 
       : 0
-    row.varPct = row.mar > 0 
-      ? Math.round(((row.atual - row.mar) / row.mar) * 10000) / 100 
+    row.varPct = row.abr > 0 
+      ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100 
       : (row.atual > 0 ? 100 : 0)
     
-    row.jan = Math.round(row.jan * 100) / 100
     row.fev = Math.round(row.fev * 100) / 100
     row.mar = Math.round(row.mar * 100) / 100
+    row.abr = Math.round(row.abr * 100) / 100
     row.atual = Math.round(row.atual * 100) / 100
-    row.difVsMar = Math.round(row.difVsMar * 100) / 100
+    row.difVsAbr = Math.round(row.difVsAbr * 100) / 100
   }
 
   return Array.from(map.values())
@@ -250,27 +270,27 @@ export function groupRowsByUnitConsolidated(rows: CockpitRow[]): CockpitRow[] {
       map.set(key, { ...row, departamentos: [], qtdDepartamentos: 0 })
     } else {
       const existing = map.get(key)!
-      existing.jan += row.jan
       existing.fev += row.fev
       existing.mar += row.mar
+      existing.abr += row.abr
       existing.atual += row.atual
     }
   }
 
   for (const row of map.values()) {
-    const mesesValidos = [row.jan, row.fev, row.mar].filter(v => v > 0)
+    const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
     row.media = mesesValidos.length > 0 
-      ? Math.round(((row.jan + row.fev + row.mar) / mesesValidos.length) * 100) / 100 
+      ? Math.round(((row.fev + row.mar + row.abr) / mesesValidos.length) * 100) / 100 
       : 0
-    row.varPct = row.mar > 0 
-      ? Math.round(((row.atual - row.mar) / row.mar) * 10000) / 100 
+    row.varPct = row.abr > 0 
+      ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100 
       : (row.atual > 0 ? 100 : 0)
-    row.difVsMar = Math.round((row.atual - row.mar) * 100) / 100
-    row.status = calcStatus(row.difVsMar, row.tipoMatch)
+    row.difVsAbr = Math.round((row.atual - row.abr) * 100) / 100
+    row.status = calcStatus(row.difVsAbr, row.tipoMatch)
     
-    row.jan = Math.round(row.jan * 100) / 100
     row.fev = Math.round(row.fev * 100) / 100
     row.mar = Math.round(row.mar * 100) / 100
+    row.abr = Math.round(row.abr * 100) / 100
     row.atual = Math.round(row.atual * 100) / 100
   }
 
@@ -287,18 +307,18 @@ export function groupDuplicateRows(rows: CockpitRow[]): CockpitRow[] {
     } else {
       const existing = map.get(key)!
       existing.atual += row.atual
-      existing.jan += row.jan
       existing.fev += row.fev
       existing.mar += row.mar
-      existing.difVsMar = existing.atual - existing.mar
-      const mesesValidos = [existing.jan, existing.fev, existing.mar].filter(v => v > 0)
+      existing.abr += row.abr
+      existing.difVsAbr = existing.atual - existing.abr
+      const mesesValidos = [existing.fev, existing.mar, existing.abr].filter(v => v > 0)
       existing.media = mesesValidos.length > 0
-        ? Math.round(((existing.jan + existing.fev + existing.mar) / mesesValidos.length) * 100) / 100
+        ? Math.round(((existing.fev + existing.mar + existing.abr) / mesesValidos.length) * 100) / 100
         : 0
-      existing.varPct = existing.mar > 0
-        ? Math.round(((existing.atual - existing.mar) / existing.mar) * 10000) / 100
+      existing.varPct = existing.abr > 0
+        ? Math.round(((existing.atual - existing.abr) / existing.abr) * 100)
         : (existing.atual > 0 ? 100 : 0)
-      existing.status = calcStatus(existing.difVsMar, existing.tipoMatch)
+      existing.status = calcStatus(existing.difVsAbr, existing.tipoMatch)
       existing.departamentos.push(...row.departamentos)
       existing.qtdDepartamentos = existing.departamentos.length
     }

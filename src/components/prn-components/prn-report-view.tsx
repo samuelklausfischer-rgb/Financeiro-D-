@@ -53,7 +53,7 @@ export function PrnReportView({ data }: { data: any }) {
     )
   }
 
-  const crossAnalysis = data.data?.crossAnalysis || { rows: [], months: [] }
+  const crossAnalysis = data.data?.byBlock ? { byBlock: data.data.byBlock } : (data.data?.crossAnalysis || { rows: [], months: [] })
   const rawDetails = data.data || {}
   const summary = data.summary || {}
 

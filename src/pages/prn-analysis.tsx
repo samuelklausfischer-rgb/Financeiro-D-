@@ -188,6 +188,15 @@ export default function PrnAnalysis() {
         fileToBase64(dailyFile),
       ])
 
+      // Detecta se o payload contém o novo formato consolidado (3 blocos por arquivo)
+      // O novo formato gera sheetNames com sufixo ::MATRIZ, ::CAMBORIU ou ::PALHOCA
+      const isConsolidatedFormat = historicalRows.some(
+        (sheet) =>
+          sheet.sheetName.includes('::MATRIZ') ||
+          sheet.sheetName.includes('::CAMBORIU') ||
+          sheet.sheetName.includes('::PALHOCA'),
+      )
+
       const historicalJsonBlob = new Blob(
         [JSON.stringify(historicalRows)],
         { type: 'application/json' },
@@ -201,6 +210,8 @@ export default function PrnAnalysis() {
       formData.append('historical_filename', summarizeHistoricalSources(historicalSources))
       formData.append('historical_files_meta', JSON.stringify(historicalSources))
       formData.append('historical_file_count', String(historicalSources.length))
+      formData.append('historical_sheet_count', String(historicalRows.length))
+      formData.append('historical_format', isConsolidatedFormat ? 'consolidated_v2' : 'legacy_v1')
       if (refDateStr) formData.append('reference_date', refDateStr)
 
       const response = await submitPrnAnalysisJson(formData)

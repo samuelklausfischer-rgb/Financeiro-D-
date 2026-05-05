@@ -10,8 +10,10 @@ import {
   ChevronDown,
   ChevronRight,
   Layers,
+  Sheet,
 } from 'lucide-react'
 import { generateAuditPDF, generateGroupedAuditPDF } from '@/lib/export-pdf'
+import { generateAuditExcel, generateGroupedAuditExcel } from '@/lib/export-excel'
 import { buildCockpitRows, groupDuplicateRows, CockpitRow } from '@/lib/audit-utils'
 
 // ─── Unidade badge config ─────────────────────────────────────────────
@@ -104,12 +106,15 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingGrouped, setIsExportingGrouped] = useState(false)
+  const [isExportingExcel, setIsExportingExcel] = useState(false)
+  const [isExportingExcelGrouped, setIsExportingExcelGrouped] = useState(false)
   const [sortKey, setSortKey] = useState<keyof CockpitRow | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   // Build cockpit rows from all 3 blocks
   const allRows = useMemo<CockpitRow[]>(() => {
-    const byBlock = data?.byBlock
+    // Busca byBlock diretamente em data ou dentro de data.crossAnalysis
+    const byBlock = data?.byBlock || data?.crossAnalysis?.byBlock
     const result: CockpitRow[] = []
 
     if (byBlock && typeof byBlock === 'object') {
@@ -190,7 +195,25 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
     }
   }
 
-  if (!data || (!Array.isArray(data?.rows) && !Array.isArray(data) && !data?.byBlock)) return null
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true)
+    try {
+      await generateAuditExcel(fullPayload)
+    } finally {
+      setIsExportingExcel(false)
+    }
+  }
+
+  const handleExportExcelGrouped = async () => {
+    setIsExportingExcelGrouped(true)
+    try {
+      await generateGroupedAuditExcel(fullPayload)
+    } finally {
+      setIsExportingExcelGrouped(false)
+    }
+  }
+
+  if (!data || (!Array.isArray(data?.rows) && !Array.isArray(data) && !data?.byBlock && !data?.crossAnalysis?.byBlock)) return null
 
   // ─── Sortable column header ──────────────────────────────────────────
   const SortTh = ({
@@ -226,12 +249,12 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
       <div className="space-y-4 border-b border-white/5 pb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
           <div className="space-y-2">
-            <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tighter">
-              <div className="p-2 bg-blue-500/10 rounded-xl">
-                <History className="h-6 w-6 text-blue-400" />
-              </div>
-              Cockpit Financeiro — Cruzamento vs Março
-            </h3>
+              <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tighter">
+                <div className="p-2 bg-blue-500/10 rounded-xl">
+                  <History className="h-6 w-6 text-blue-400" />
+                </div>
+                Cockpit Financeiro — Cruzamento vs Abril
+              </h3>
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] pl-14">
               {allRows.length} favorecidos · {counts.Aumento} aumentos · {counts.Queda} quedas ·{' '}
               {counts.Novo} novos · {counts.Igual} iguais
@@ -257,6 +280,26 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
           >
             <Layers className={cn('h-4 w-4 mr-2 text-purple-400', isExportingGrouped && 'animate-pulse')} />
             {isExportingGrouped ? 'Exportando...' : 'PDF Agrupado'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 font-bold rounded-xl h-10 px-4 transition-all"
+          >
+            <Sheet className={cn('h-4 w-4 mr-2', isExportingExcel && 'animate-pulse')} />
+            {isExportingExcel ? 'Exportando...' : 'Exportar Excel'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcelGrouped}
+            disabled={isExportingExcelGrouped}
+            className="border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 text-teal-400 font-bold rounded-xl h-10 px-4 transition-all"
+          >
+            <Sheet className={cn('h-4 w-4 mr-2', isExportingExcelGrouped && 'animate-pulse')} />
+            {isExportingExcelGrouped ? 'Exportando...' : 'Excel Agrupado'}
           </Button>
         </div>
 
@@ -337,9 +380,9 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                       <tr>
                         <SortTh label="Favorecido" field="favorecido" />
                         <SortTh label="Categoria" field="categoria" />
-                        <SortTh label="Jan" field="jan" align="right" />
                         <SortTh label="Fev" field="fev" align="right" />
                         <SortTh label="Mar" field="mar" align="right" />
+                        <SortTh label="Abr" field="abr" align="right" />
                         <SortTh label="Média" field="media" align="right" />
                         <SortTh label="Atual" field="atual" align="right" />
                         <SortTh label="Var %" field="varPct" align="right" />
@@ -370,11 +413,6 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                             )}
                           </td>
 
-                          {/* Jan */}
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.jan} />
-                          </td>
-
                           {/* Fev */}
                           <td className="px-3 py-3 text-right">
                             <MoneyCell value={row.fev} />
@@ -383,6 +421,11 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                           {/* Mar */}
                           <td className="px-3 py-3 text-right">
                             <MoneyCell value={row.mar} />
+                          </td>
+
+                          {/* Abr */}
+                          <td className="px-3 py-3 text-right">
+                            <MoneyCell value={row.abr} />
                           </td>
 
                           {/* Média */}
