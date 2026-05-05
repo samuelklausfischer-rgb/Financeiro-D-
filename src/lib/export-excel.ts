@@ -12,7 +12,8 @@ const TABLE_HEADERS = [
   'Atual', 
   'Dif vs Abr', 
   'Var %', 
-  'Status'
+  'Status',
+  'OBS do Financeiro'
 ]
 
 // Cores de Fundo para CABEÇALHOS das Unidades (Sólidas)
@@ -27,6 +28,15 @@ const UNIT_ROW_COLORS: Record<string, string> = {
   'PRN MATRIZ': 'FFEBF5FB', // Azul claro
   'CAMBORIU': 'FFEBF7EB', // Verde claro
   'PALHOCA': 'FFFEF9EB', // Laranja claro
+}
+
+function formatBRL(value: number | null | undefined) {
+  const amount = Number(value ?? 0)
+  if (!Number.isFinite(amount)) return ''
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(amount)
 }
 
 /**
@@ -86,7 +96,7 @@ export async function generateAuditExcel(data: any) {
     // BARRA DA UNIDADE
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:J${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:K${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -103,14 +113,15 @@ export async function generateAuditExcel(data: any) {
       const mainRow = worksheet.addRow([
         row.favorecido,
         row.categoria,
-        row.fev,
-        row.mar,
-        row.abr,
-        row.media,
-        row.atual,
-        row.difVsAbr,
+        formatBRL(row.fev),
+        formatBRL(row.mar),
+        formatBRL(row.abr),
+        formatBRL(row.media),
+        formatBRL(row.atual),
+        formatBRL(row.difVsAbr),
         `${row.varPct?.toFixed(2)}%`,
-        row.status
+        row.status,
+        ''
       ])
 
       mainRow.eachCell((cell, colNumber) => {
@@ -131,8 +142,8 @@ export async function generateAuditExcel(data: any) {
           const deptRow = worksheet.addRow([
             `    └─ ${dept.dept}`, 
             '', '', '', '', '', 
-            dept.valor, 
-            '', '', ''
+            formatBRL(dept.valor), 
+            '', '', '', ''
           ])
           deptRow.eachCell((cell) => {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
@@ -153,7 +164,7 @@ export async function generateAuditExcel(data: any) {
   // Ajustes Finais
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 22 }
   ]
 
   const buffer = await workbook.xlsx.writeBuffer()
@@ -187,7 +198,7 @@ export async function generateGroupedAuditExcel(data: any) {
     // BARRA DA UNIDADE (Identidade Visual)
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:J${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:K${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -203,14 +214,15 @@ export async function generateGroupedAuditExcel(data: any) {
       const r = worksheet.addRow([
         row.favorecido,
         row.categoria,
-        row.fev,
-        row.mar,
-        row.abr,
-        row.media,
-        row.atual,
-        row.difVsAbr,
+        formatBRL(row.fev),
+        formatBRL(row.mar),
+        formatBRL(row.abr),
+        formatBRL(row.media),
+        formatBRL(row.atual),
+        formatBRL(row.difVsAbr),
         `${row.varPct?.toFixed(2)}%`,
-        row.status
+        row.status,
+        ''
       ])
       
       r.eachCell((cell, colNum) => {
@@ -236,7 +248,7 @@ export async function generateGroupedAuditExcel(data: any) {
 
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 22 }
   ]
   
   const buffer = await workbook.xlsx.writeBuffer()
