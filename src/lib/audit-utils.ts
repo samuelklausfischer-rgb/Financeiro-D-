@@ -1,5 +1,3 @@
-import { formatCurrency, formatPercentage } from './formatters'
-
 const monthNames: Record<string, string> = {
   '01': 'Janeiro',
   '02': 'Fevereiro',
@@ -17,7 +15,7 @@ const monthNames: Record<string, string> = {
 
 export function formatMonthName(monthCode: string): string {
   if (!monthCode || !monthCode.includes('-')) return monthCode
-  const [year, month] = monthCode.split('-')
+  const [, month] = monthCode.split('-')
   const name = monthNames[month]
   return name ? `${name}` : monthCode
 }
@@ -44,7 +42,7 @@ export interface AuditRow {
   departamento?: string
 }
 
-export function normalizeAuditData(rawRows: any[], months: string[]): AuditRow[] {
+export function normalizeAuditData(rawRows: any[], _months: string[]): AuditRow[] {
   return rawRows.map(row => ({
     nome: row.nome || 'Desconhecido',
     categoria: row.categoria || null,
@@ -107,6 +105,37 @@ export function calcStatus(dif: number, tipoMatch: string): CockpitStatus {
   if (dif < -0.01) return 'Queda'
   if (tipoMatch.includes('Novo')) return 'Novo'
   return 'Igual'
+}
+
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100
+}
+
+function mergeHistoricalBaseline(existing: CockpitRow, row: CockpitRow) {
+  const existingHasHistory = existing.fev > 0 || existing.mar > 0 || existing.abr > 0
+  const incomingHasHistory = row.fev > 0 || row.mar > 0 || row.abr > 0
+
+  if (!existingHasHistory && incomingHasHistory) {
+    existing.fev = row.fev
+    existing.mar = row.mar
+    existing.abr = row.abr
+  }
+}
+
+function recalculateGroupedRow(row: CockpitRow) {
+  const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
+  row.media = mesesValidos.length > 0
+    ? roundMoney((row.fev + row.mar + row.abr) / mesesValidos.length)
+    : 0
+  row.difVsAbr = roundMoney(row.atual - row.abr)
+  row.varPct = row.abr > 0
+    ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100
+    : (row.atual > 0 ? 100 : 0)
+  row.status = calcStatus(row.difVsAbr, row.tipoMatch)
+  row.fev = roundMoney(row.fev)
+  row.mar = roundMoney(row.mar)
+  row.abr = roundMoney(row.abr)
+  row.atual = roundMoney(row.atual)
 }
 
 function monthNum(code: string): number {
@@ -207,7 +236,7 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
 export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
-  for (const row of allRows) {
+  for (const row of groupDuplicateRows(allRows)) {
     const key = `${row.favorecido}|||${row.categoria}`
     if (!map.has(key)) {
       map.set(key, {
@@ -233,29 +262,15 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
       existing.mar += row.mar
       existing.abr += row.abr
       existing.atual += row.atual
-      existing.difVsAbr = existing.atual - existing.abr
       
       if (row.tipoMatch === 'Novo (sem historico)') {
         existing.tipoMatch = 'Novo (sem historico)'
       }
-      existing.status = calcStatus(existing.difVsAbr, existing.tipoMatch)
     }
   }
 
   for (const row of map.values()) {
-    const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
-    row.media = mesesValidos.length > 0 
-      ? Math.round(((row.fev + row.mar + row.abr) / mesesValidos.length) * 100) / 100 
-      : 0
-    row.varPct = row.abr > 0 
-      ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100 
-      : (row.atual > 0 ? 100 : 0)
-    
-    row.fev = Math.round(row.fev * 100) / 100
-    row.mar = Math.round(row.mar * 100) / 100
-    row.abr = Math.round(row.abr * 100) / 100
-    row.atual = Math.round(row.atual * 100) / 100
-    row.difVsAbr = Math.round(row.difVsAbr * 100) / 100
+    recalculateGroupedRow(row)
   }
 
   return Array.from(map.values())
@@ -270,28 +285,14 @@ export function groupRowsByUnitConsolidated(rows: CockpitRow[]): CockpitRow[] {
       map.set(key, { ...row, departamentos: [], qtdDepartamentos: 0 })
     } else {
       const existing = map.get(key)!
-      existing.fev += row.fev
-      existing.mar += row.mar
-      existing.abr += row.abr
       existing.atual += row.atual
+      // Fev/Mar/Abr are already historical totals for this key; duplicate current rows repeat them.
+      mergeHistoricalBaseline(existing, row)
     }
   }
 
   for (const row of map.values()) {
-    const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
-    row.media = mesesValidos.length > 0 
-      ? Math.round(((row.fev + row.mar + row.abr) / mesesValidos.length) * 100) / 100 
-      : 0
-    row.varPct = row.abr > 0 
-      ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100 
-      : (row.atual > 0 ? 100 : 0)
-    row.difVsAbr = Math.round((row.atual - row.abr) * 100) / 100
-    row.status = calcStatus(row.difVsAbr, row.tipoMatch)
-    
-    row.fev = Math.round(row.fev * 100) / 100
-    row.mar = Math.round(row.mar * 100) / 100
-    row.abr = Math.round(row.abr * 100) / 100
-    row.atual = Math.round(row.atual * 100) / 100
+    recalculateGroupedRow(row)
   }
 
   return Array.from(map.values())
@@ -307,20 +308,10 @@ export function groupDuplicateRows(rows: CockpitRow[]): CockpitRow[] {
     } else {
       const existing = map.get(key)!
       existing.atual += row.atual
-      existing.fev += row.fev
-      existing.mar += row.mar
-      existing.abr += row.abr
-      existing.difVsAbr = existing.atual - existing.abr
-      const mesesValidos = [existing.fev, existing.mar, existing.abr].filter(v => v > 0)
-      existing.media = mesesValidos.length > 0
-        ? Math.round(((existing.fev + existing.mar + existing.abr) / mesesValidos.length) * 100) / 100
-        : 0
-      existing.varPct = existing.abr > 0
-        ? Math.round(((existing.atual - existing.abr) / existing.abr) * 100)
-        : (existing.atual > 0 ? 100 : 0)
-      existing.status = calcStatus(existing.difVsAbr, existing.tipoMatch)
+      mergeHistoricalBaseline(existing, row)
       existing.departamentos.push(...row.departamentos)
       existing.qtdDepartamentos = existing.departamentos.length
+      recalculateGroupedRow(existing)
     }
   }
 
