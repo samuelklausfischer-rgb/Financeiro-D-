@@ -112,7 +112,7 @@ export async function generateAuditPDF(data: any) {
     currentY += 6
 
     // Cabeçalho da tabela
-    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Média', 'Atual', 'Var %']
+    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Atual', 'Var %']
 
     // Prepara as linhas: grupo + detalhes
     const tableRows: any[] = []
@@ -131,7 +131,6 @@ export async function generateAuditPDF(data: any) {
           formatCurrency(row.jan || 0),
           formatCurrency(row.fev || 0),
           formatCurrency(row.mar || 0),
-          formatCurrency(row.media || 0),
           formatCurrency(row.atual || 0),
           formatPercentage(row.varPct || 0),
         ]
@@ -149,7 +148,6 @@ export async function generateAuditPDF(data: any) {
               '',  // Jan
               '',  // Fev
               '',  // Mar
-              '',  // Média
               formatCurrency(dept.valor || 0),  // Valor no campo "Atual"
               '',  // Var %
             ]
@@ -167,8 +165,8 @@ export async function generateAuditPDF(data: any) {
       columnStyles: {
         0: { cellWidth: 50 },  // Favorecido
         1: { cellWidth: 30 },  // Categoria
-        7: { halign: 'right', fontStyle: 'bold' },  // Atual
-        8: { halign: 'right' }  // Var %
+        5: { halign: 'right', fontStyle: 'bold' },  // Atual
+        6: { halign: 'right' }  // Var %
       },
       didParseCell: (data: any) => {
         const rowMeta = tableRows[data.row.index]
@@ -191,7 +189,7 @@ export async function generateAuditPDF(data: any) {
         }
 
         // Destaque em vermelho para variações altas
-        if (data.section === 'body' && !rowMeta?.isDetail && data.column.index === 8) {
+        if (data.section === 'body' && !rowMeta?.isDetail && data.column.index === 6) {
           const valStr = data.cell.text[0].replace('%', '').replace(',', '.')
           const val = parseFloat(valStr)
           if (Math.abs(val) > 25) {
@@ -291,7 +289,7 @@ export async function generateGroupedAuditPDF(data: any) {
     currentY += 6
 
     // MONTAGEM DAS LINHAS (SEM DEPARTAMENTOS)
-    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Média', 'Atual', 'Var %']
+    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Atual', 'Var %']
     const tableRows: any[] = []
 
     for (const row of groupedRows) {
@@ -302,7 +300,6 @@ export async function generateGroupedAuditPDF(data: any) {
           formatCurrency(row.jan || 0),
           formatCurrency(row.fev || 0),
           formatCurrency(row.mar || 0),
-          formatCurrency(row.media || 0),
           formatCurrency(row.atual || 0),
           formatPercentage(row.varPct || 0),
         ]
@@ -319,8 +316,8 @@ export async function generateGroupedAuditPDF(data: any) {
       columnStyles: {
         0: { cellWidth: 50 },
         1: { cellWidth: 30 },
-        6: { halign: 'right', fontStyle: 'bold' },
-        7: { halign: 'right' }
+        5: { halign: 'right', fontStyle: 'bold' },
+        6: { halign: 'right' }
       },
       didParseCell: (data: any) => {
         if (data.section === 'body') {
@@ -331,7 +328,7 @@ export async function generateGroupedAuditPDF(data: any) {
           data.cell.styles.fontSize = 9
 
           // Destaque em vermelho para variações altas
-          if (data.column.index === 7) {
+          if (data.column.index === 6) {
             const valStr = data.cell.text[0].replace('%', '').replace(',', '.')
             const val = parseFloat(valStr)
             if (Math.abs(val) > 25) {

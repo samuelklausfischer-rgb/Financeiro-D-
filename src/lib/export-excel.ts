@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
-import { buildCockpitRows, groupDuplicateRows, groupRowsByUnitConsolidated, CockpitRow } from './audit-utils'
+import { buildCockpitRows, groupDuplicateRows, groupRowsByUnitConsolidated } from './audit-utils'
 
 const TABLE_HEADERS = [
   'Favorecido', 
@@ -8,11 +8,8 @@ const TABLE_HEADERS = [
   'Fev', 
   'Mar', 
   'Abr', 
-  'Média', 
   'Atual', 
-  'Dif vs Abr', 
   'Var %', 
-  'Status',
   'OBS do Financeiro'
 ]
 
@@ -100,7 +97,7 @@ export async function generateAuditExcel(data: any) {
     // BARRA DA UNIDADE
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:K${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:H${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -120,11 +117,8 @@ export async function generateAuditExcel(data: any) {
         formatBRL(row.fev),
         formatBRL(row.mar),
         formatBRL(row.abr),
-        formatBRL(row.media),
         formatBRL(row.atual),
-        formatBRL(row.difVsAbr),
         `${row.varPct?.toFixed(2)}%`,
-        row.status,
         ''
       ])
 
@@ -132,14 +126,14 @@ export async function generateAuditExcel(data: any) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
         cell.border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
         
-        // Cores de Status
-        if (colNumber === 9 || colNumber === 10) {
+        // Mantém o destaque visual da variação mesmo sem exibir a coluna Status.
+        if (colNumber === 7) {
           if (row.status === 'Aumento') cell.font = { color: { argb: 'FFEF4444' }, bold: true }
           if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
           if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
         }
 
-        if (colNumber === 11) {
+        if (colNumber === 8) {
           styleFinanceNoteCell(cell)
         }
       })
@@ -149,14 +143,14 @@ export async function generateAuditExcel(data: any) {
         for (const dept of row.departamentos) {
           const deptRow = worksheet.addRow([
             `    └─ ${dept.dept}`, 
-            '', '', '', '', '', 
+            '', '', '', '',
             formatBRL(dept.valor), 
-            '', '', '', ''
+            '', ''
           ])
       deptRow.eachCell((cell) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
         cell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
-        if (cell.col === 11) {
+        if (cell.col === 8) {
           styleFinanceNoteCell(cell)
         }
       })
@@ -175,7 +169,7 @@ export async function generateAuditExcel(data: any) {
   // Ajustes Finais
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 28 }
+    { width: 12 }, { width: 12 }, { width: 28 }
   ]
 
   const buffer = await workbook.xlsx.writeBuffer()
@@ -209,7 +203,7 @@ export async function generateGroupedAuditExcel(data: any) {
     // BARRA DA UNIDADE (Identidade Visual)
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:K${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:H${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -228,11 +222,8 @@ export async function generateGroupedAuditExcel(data: any) {
         formatBRL(row.fev),
         formatBRL(row.mar),
         formatBRL(row.abr),
-        formatBRL(row.media),
         formatBRL(row.atual),
-        formatBRL(row.difVsAbr),
         `${row.varPct?.toFixed(2)}%`,
-        row.status,
         ''
       ])
       
@@ -240,14 +231,14 @@ export async function generateGroupedAuditExcel(data: any) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
         cell.border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
         
-        // Colunas 9 e 10 (Var % e Status)
-        if (colNum === 9 || colNum === 10) {
+        // Mantém o destaque visual da variação mesmo sem exibir a coluna Status.
+        if (colNum === 7) {
            if (row.status === 'Aumento') cell.font = { color: { argb: 'FFEF4444' }, bold: true }
            if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
            if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
         }
 
-        if (colNum === 11) {
+        if (colNum === 8) {
           styleFinanceNoteCell(cell)
         }
       })
@@ -263,7 +254,7 @@ export async function generateGroupedAuditExcel(data: any) {
 
   worksheet.columns = [
     { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 28 }
+    { width: 12 }, { width: 12 }, { width: 28 }
   ]
   
   const buffer = await workbook.xlsx.writeBuffer()
