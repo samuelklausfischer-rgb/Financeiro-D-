@@ -253,7 +253,7 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                 <div className="p-2 bg-blue-500/10 rounded-xl">
                   <History className="h-6 w-6 text-blue-400" />
                 </div>
-                Cockpit Financeiro — Cruzamento vs Abril
+                Cockpit Financeiro — Cruzamento vs Maio
               </h3>
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] pl-14">
               {allRows.length} favorecidos · {counts.Aumento} aumentos · {counts.Queda} quedas ·{' '}
@@ -380,9 +380,9 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                       <tr>
                         <SortTh label="Favorecido" field="favorecido" />
                         <SortTh label="Categoria" field="categoria" />
-                        <SortTh label="Fev" field="fev" align="right" />
                         <SortTh label="Mar" field="mar" align="right" />
                         <SortTh label="Abr" field="abr" align="right" />
+                        <SortTh label="Maio" field="mai" align="right" />
                         <SortTh label="Média" field="media" align="right" />
                         <SortTh label="Atual" field="atual" align="right" />
                         <SortTh label="Var %" field="varPct" align="right" />
@@ -413,11 +413,6 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                             )}
                           </td>
 
-                          {/* Fev */}
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.fev} />
-                          </td>
-
                           {/* Mar */}
                           <td className="px-3 py-3 text-right">
                             <MoneyCell value={row.mar} />
@@ -426,6 +421,11 @@ export function PrnCrossAnalysis({ data, fullPayload }: { data?: any; fullPayloa
                           {/* Abr */}
                           <td className="px-3 py-3 text-right">
                             <MoneyCell value={row.abr} />
+                          </td>
+
+                          {/* Maio */}
+                          <td className="px-3 py-3 text-right">
+                            <MoneyCell value={row.mai} />
                           </td>
 
                           {/* Média */}

@@ -75,8 +75,10 @@ export interface CockpitRow {
   fev: number
   mar: number
   abr: number
+  mai: number
   atual: number
   difVsAbr: number
+  difVsMai: number
   status: CockpitStatus
   tipoMatch: string
   qtdDepartamentos: number
@@ -111,30 +113,39 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100
 }
 
+function numberValue(...values: unknown[]): number {
+  const value = values.find(v => v !== undefined && v !== null)
+  const amount = Number(value ?? 0)
+  return Number.isFinite(amount) ? amount : 0
+}
+
 function mergeHistoricalBaseline(existing: CockpitRow, row: CockpitRow) {
-  const existingHasHistory = existing.fev > 0 || existing.mar > 0 || existing.abr > 0
-  const incomingHasHistory = row.fev > 0 || row.mar > 0 || row.abr > 0
+  const existingHasHistory = existing.mar > 0 || existing.abr > 0 || existing.mai > 0
+  const incomingHasHistory = row.mar > 0 || row.abr > 0 || row.mai > 0
 
   if (!existingHasHistory && incomingHasHistory) {
     existing.fev = row.fev
     existing.mar = row.mar
     existing.abr = row.abr
+    existing.mai = row.mai
   }
 }
 
 function recalculateGroupedRow(row: CockpitRow) {
-  const mesesValidos = [row.fev, row.mar, row.abr].filter(v => v > 0)
+  const mesesValidos = [row.mar, row.abr, row.mai].filter(v => v > 0)
   row.media = mesesValidos.length > 0
-    ? roundMoney((row.fev + row.mar + row.abr) / mesesValidos.length)
+    ? roundMoney((row.mar + row.abr + row.mai) / mesesValidos.length)
     : 0
   row.difVsAbr = roundMoney(row.atual - row.abr)
-  row.varPct = row.abr > 0
-    ? Math.round(((row.atual - row.abr) / row.abr) * 10000) / 100
+  row.difVsMai = roundMoney(row.atual - row.mai)
+  row.varPct = row.mai > 0
+    ? Math.round(((row.atual - row.mai) / row.mai) * 10000) / 100
     : (row.atual > 0 ? 100 : 0)
-  row.status = calcStatus(row.difVsAbr, row.tipoMatch)
+  row.status = calcStatus(row.difVsMai, row.tipoMatch)
   row.fev = roundMoney(row.fev)
   row.mar = roundMoney(row.mar)
   row.abr = roundMoney(row.abr)
+  row.mai = roundMoney(row.mai)
   row.atual = roundMoney(row.atual)
 }
 
@@ -143,13 +154,21 @@ function monthNum(code: string): number {
   return parts.length === 2 ? parseInt(parts[1], 10) : 0
 }
 
-function extractFevMarAbr(row: any): { fev: number; mar: number; abr: number } {
+function extractHistoricalMonths(row: any): { fev: number; mar: number; abr: number; mai: number } {
   // 1. Prioridade para campos diretos (novo formato n8n V5)
-  if (typeof row.fev === 'number' || typeof row.mar === 'number' || typeof row.abr === 'number') {
+  if (
+    typeof row.fev !== 'undefined' ||
+    typeof row.mar !== 'undefined' ||
+    typeof row.abr !== 'undefined' ||
+    typeof row.mai !== 'undefined' ||
+    typeof row.maio !== 'undefined' ||
+    typeof row.may !== 'undefined'
+  ) {
     return {
-      fev: Number(row.fev ?? 0),
-      mar: Number(row.mar ?? 0),
-      abr: Number(row.abr ?? 0)
+      fev: numberValue(row.fev),
+      mar: numberValue(row.mar),
+      abr: numberValue(row.abr),
+      mai: numberValue(row.mai, row.maio, row.may)
     }
   }
 
@@ -162,7 +181,8 @@ function extractFevMarAbr(row: any): { fev: number; mar: number; abr: number } {
   const fev = sorted.find(([k]) => monthNum(k) === 2)?.[1] ?? 0
   const mar = sorted.find(([k]) => monthNum(k) === 3)?.[1] ?? 0
   const abr = sorted.find(([k]) => monthNum(k) === 4)?.[1] ?? 0
-  return { fev, mar, abr }
+  const mai = sorted.find(([k]) => monthNum(k) === 5)?.[1] ?? 0
+  return { fev: numberValue(fev), mar: numberValue(mar), abr: numberValue(abr), mai: numberValue(mai) }
 }
 
 export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
@@ -178,19 +198,22 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
     const favorecido = ns(row.nome || row.favorecido || row.name || '')
     const categoria = ns(row.categoria || row.categoriaOriginal || '')
     
-    // Extrai Fev/Mar/Abr (com suporte a n8n V5 e Legado)
-    const { fev, mar, abr } = extractFevMarAbr(row)
+    // Extrai Mar/Abr/Maio, preservando Fev apenas para compatibilidade com relatórios antigos.
+    const { fev, mar, abr, mai } = extractHistoricalMonths(row)
     
     const atual = Number(row.atual ?? row.valorPago ?? row.valorDia ?? 0)
     const difVsAbr = typeof row.difVsAbr === 'number' ? row.difVsAbr : (atual - abr)
+    const difVsMai = typeof row.difVsMai === 'number'
+      ? row.difVsMai
+      : (typeof row.difVsMaio === 'number' ? row.difVsMaio : (atual - mai))
 
     let tipoMatch = row.tipoMatch || ''
     if (!tipoMatch) {
-      const temHistorico = row.temHistorico ?? (fev > 0 || mar > 0 || abr > 0)
+      const temHistorico = row.temHistorico ?? (mar > 0 || abr > 0 || mai > 0)
       tipoMatch = temHistorico ? 'Match exato (favorecido + categoria)' : 'Novo (sem historico)'
     }
 
-    const status = (row.status as CockpitStatus) || calcStatus(difVsAbr, tipoMatch)
+    const status = calcStatus(difVsMai, tipoMatch)
 
     const departamentos: Array<{ dept: string; valor: number }> = []
     if (Array.isArray(row.dailyLines)) {
@@ -207,11 +230,9 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
       departamentos.push({ dept: ns(row.departamento), valor: atual })
     }
 
-    // Calcular media e varPct (Média de Fev, Mar, Abr)
-    // Se o n8n já enviou, respeita o valor dele
-    const mesesValidos = [fev, mar, abr].filter(v => v > 0)
-    const media = typeof row.media === 'number' ? row.media : (mesesValidos.length > 0 ? (fev + mar + abr) / mesesValidos.length : 0)
-    const varPct = typeof row.varPct === 'number' ? row.varPct : (abr > 0 ? ((atual - abr) / abr) * 100 : (atual > 0 ? 100 : 0))
+    const mesesValidos = [mar, abr, mai].filter(v => v > 0)
+    const media = mesesValidos.length > 0 ? (mar + abr + mai) / mesesValidos.length : 0
+    const varPct = mai > 0 ? ((atual - mai) / mai) * 100 : (atual > 0 ? 100 : 0)
 
     return {
       unidade,
@@ -220,8 +241,10 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
       fev,
       mar,
       abr,
+      mai,
       atual,
       difVsAbr,
+      difVsMai,
       status,
       tipoMatch,
       qtdDepartamentos: departamentos.length,
@@ -246,8 +269,10 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
         fev: row.fev,
         mar: row.mar,
         abr: row.abr,
+        mai: row.mai,
         atual: row.atual,
         difVsAbr: row.difVsAbr,
+        difVsMai: row.difVsMai,
         status: row.status,
         tipoMatch: row.tipoMatch,
         qtdDepartamentos: 0,
@@ -261,6 +286,7 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
       existing.fev += row.fev
       existing.mar += row.mar
       existing.abr += row.abr
+      existing.mai += row.mai
       existing.atual += row.atual
       
       if (row.tipoMatch === 'Novo (sem historico)') {
@@ -286,7 +312,7 @@ export function groupRowsByUnitConsolidated(rows: CockpitRow[]): CockpitRow[] {
     } else {
       const existing = map.get(key)!
       existing.atual += row.atual
-      // Fev/Mar/Abr are already historical totals for this key; duplicate current rows repeat them.
+      // Mar/Abr/Maio are already historical totals for this key; duplicate current rows repeat them.
       mergeHistoricalBaseline(existing, row)
     }
   }

@@ -5,9 +5,9 @@ import { buildCockpitRows, groupDuplicateRows, groupRowsByUnitConsolidated } fro
 const TABLE_HEADERS = [
   'Favorecido', 
   'Categoria', 
-  'Fev', 
   'Mar', 
   'Abr', 
+  'Maio',
   'Atual', 
   'Var %', 
   'OBS do Financeiro'
@@ -114,9 +114,9 @@ export async function generateAuditExcel(data: any) {
       const mainRow = worksheet.addRow([
         row.favorecido,
         row.categoria,
-        formatBRL(row.fev),
         formatBRL(row.mar),
         formatBRL(row.abr),
+        formatBRL(row.mai),
         formatBRL(row.atual),
         `${row.varPct?.toFixed(2)}%`,
         ''
@@ -219,9 +219,9 @@ export async function generateGroupedAuditExcel(data: any) {
       const r = worksheet.addRow([
         row.favorecido,
         row.categoria,
-        formatBRL(row.fev),
         formatBRL(row.mar),
         formatBRL(row.abr),
+        formatBRL(row.mai),
         formatBRL(row.atual),
         `${row.varPct?.toFixed(2)}%`,
         ''

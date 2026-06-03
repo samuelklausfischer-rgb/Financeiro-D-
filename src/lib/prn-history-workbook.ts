@@ -40,10 +40,10 @@ const CONSOLIDATED_BLOCKS = [
 ] as const
 
 /**
- * Filtro de período: apenas Fevereiro (2), Março (3) e Abril (4).
- * Janeiro (1) e qualquer outro mês fora desse intervalo são descartados.
+ * Filtro de período: apenas Março (3), Abril (4) e Maio (5).
+ * Qualquer outro mês fora desse intervalo é descartado.
  */
-const ALLOWED_MONTHS = new Set([2, 3, 4])
+const ALLOWED_MONTHS = new Set([3, 4, 5])
 
 /**
  * Linha (índice base-zero) a partir da qual os dados reais começam.
@@ -125,13 +125,30 @@ function blockRowHasData(row: unknown[], colForn: number, colData: number): bool
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Normaliza categorias históricas genéricas para bater exatamente com a
+ * nomenclatura atual de cada unidade esperada pelo n8n no cruzamento.
+ */
+function normalizeCategoryForN8n(cat: string, unit: string): string {
+  const c = cat.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+
+  if (unit === 'CAMBORIU' && c === 'HONORARIOS MEDICOS') {
+    return 'Honorários Médicos PJ'
+  }
+  if (unit === 'PALHOCA' && c === 'HONORARIOS MEDICOS') {
+    return 'Honorário Médico'
+  }
+
+  return cat
+}
+
+/**
  * Processa a aba "financas" do novo formato consolidado.
  *
  * Para cada bloco (MATRIZ, CAMBORIU, PALHOCA), percorre as linhas de dados
  * (a partir da linha DATA_START_ROW) e:
  *  1. Verifica se a linha possui dados para aquele bloco.
  *  2. Converte a data serial para ISO e extrai o mês.
- *  3. Descarta linhas cujo mês não esteja em ALLOWED_MONTHS (Fev, Mar, Abr).
+ *  3. Descarta linhas cujo mês não esteja em ALLOWED_MONTHS (Mar, Abr, Maio).
  *  4. Monta uma linha normalizada com os 4 campos do bloco.
  *
  * Retorna um HistorySheetData por bloco, com sheetName identificando a matriz,
@@ -157,13 +174,15 @@ function extractConsolidatedBlocks(
 
       const month = excelSerialToMonth(row[colData])
 
-      // Filtro temporal: aceita apenas Fev (2), Mar (3) e Abr (4)
+      // Filtro temporal: aceita apenas Mar (3), Abr (4) e Maio (5)
       if (month === null || !ALLOWED_MONTHS.has(month)) continue
 
       const isoDate = excelSerialToIso(row[colData])
       const fornecedor = typeof row[colForn] === 'string' ? (row[colForn] as string).trim() : String(row[colForn] ?? '').trim()
       const valor = typeof row[colValor] === 'number' ? row[colValor] : Number(String(row[colValor] ?? '0').replace(',', '.')) || 0
-      const categoria = typeof row[colCat] === 'string' ? (row[colCat] as string).trim() : String(row[colCat] ?? '').trim()
+
+      const rawCategoria = typeof row[colCat] === 'string' ? (row[colCat] as string).trim() : String(row[colCat] ?? '').trim()
+      const categoria = normalizeCategoryForN8n(rawCategoria, name)
 
       blockRows.push([fornecedor, valor, categoria, isoDate])
     }
@@ -221,7 +240,7 @@ function extractLegacySheets(
  *
  * Detecta automaticamente o formato da planilha:
  *   - NOVO (consolidado): aba "financas" com 3 blocos de colunas (MATRIZ,
- *     CAMBORIU, PALHOCA). Aplica filtro de período (Fev-Mar-Abr) e fragmenta
+ *     CAMBORIU, PALHOCA). Aplica filtro de período (Mar-Abr-Maio) e fragmenta
  *     em 3 conjuntos de dados independentes.
  *   - LEGADO: formato antigo com uma matriz por aba. Comportamento preservado.
  */
