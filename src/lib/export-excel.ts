@@ -68,7 +68,8 @@ function styleUnitHeader(row: ExcelJS.Row, unit: string) {
 }
 
 function styleFinanceNoteCell(cell: ExcelJS.Cell) {
-  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
+  cell.font = { color: { argb: 'FF111827' }, size: 10 }
 }
 
 function formatDateExcel(dateStr: string) {
