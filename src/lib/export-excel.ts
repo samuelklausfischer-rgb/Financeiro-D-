@@ -193,7 +193,7 @@ function addDuplicitySheet(workbook: ExcelJS.Workbook, duplicityData: AnalysisRe
   ]
 }
 
-export async function generateAuditExcel(data: any, duplicityData?: AnalysisRecord) {
+export async function generateAuditExcel(data: any, duplicityData?: AnalysisRecord, observations?: Record<string, { observation: string }>) {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('Auditoria Detalhada')
 
@@ -233,6 +233,8 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
     for (const row of grouped) {
       isZebra = !isZebra
       const rowColor = isZebra ? unitBg : 'FFFFFFFF'
+      const rowKey = `${row.unidade}|||${row.favorecido}|||${row.categoria}`
+      const obsText = observations?.[rowKey]?.observation || ''
 
       const mainRow = worksheet.addRow([
         row.favorecido,
@@ -243,7 +245,7 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
         formatBRL(row.mai),
         formatBRL(row.atual),
         `${row.varPct?.toFixed(2)}%`,
-        ''
+        obsText
       ])
 
       mainRow.eachCell((cell, colNumber) => {
@@ -303,7 +305,7 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
   saveAs(new Blob([buffer]), `Relatorio_Auditoria_PRN_${Date.now()}.xlsx`)
 }
 
-export async function generateGroupedAuditExcel(data: any, duplicityData?: AnalysisRecord) {
+export async function generateGroupedAuditExcel(data: any, duplicityData?: AnalysisRecord, observations?: Record<string, { observation: string }>) {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('Consolidado por Unidade')
 
@@ -342,6 +344,8 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
     for (const row of grouped) {
       isZebra = !isZebra
       const rowColor = isZebra ? unitBg : 'FFFFFFFF'
+      const rowKey = `${row.unidade}|||${row.favorecido}|||${row.categoria}`
+      const obsText = observations?.[rowKey]?.observation || ''
 
       const r = worksheet.addRow([
         row.favorecido,
@@ -352,7 +356,7 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
         formatBRL(row.mai),
         formatBRL(row.atual),
         `${row.varPct?.toFixed(2)}%`,
-        ''
+        obsText
       ])
 
       r.eachCell((cell, colNum) => {

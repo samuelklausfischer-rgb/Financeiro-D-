@@ -290,12 +290,12 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
 
   const handleExportExcel = async () => {
     setIsExportingExcel(true)
-    try { await generateAuditExcel(fullPayload, duplicityAnalysis ?? undefined) } finally { setIsExportingExcel(false) }
+    try { await generateAuditExcel(fullPayload, duplicityAnalysis ?? undefined, observations) } finally { setIsExportingExcel(false) }
   }
 
   const handleExportExcelGrouped = async () => {
     setIsExportingExcelGrouped(true)
-    try { await generateGroupedAuditExcel(fullPayload, duplicityAnalysis ?? undefined) } finally { setIsExportingExcelGrouped(false) }
+    try { await generateGroupedAuditExcel(fullPayload, duplicityAnalysis ?? undefined, observations) } finally { setIsExportingExcelGrouped(false) }
   }
 
   const handleDownloadBruto = async () => {
