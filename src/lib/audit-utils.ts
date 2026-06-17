@@ -218,13 +218,12 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
   }
   const unidade = UNIT_LABELS[blockKey] ?? blockKey.toUpperCase()
 
-  return rows.map((row) => {
+  return rows.flatMap((row) => {
     const favorecido = ns(row.nome || row.favorecido || row.name || '')
     const categoria = ns(row.categoria || row.categoriaOriginal || '')
-    
-    // Extrai Mar/Abr/Maio, preservando Fev apenas para compatibilidade com relatórios antigos.
+
     const { fev, mar, abr, mai } = extractHistoricalMonths(row)
-    
+
     const atual = Number(row.atual ?? row.valorPago ?? row.valorDia ?? 0)
     const difVsAbr = typeof row.difVsAbr === 'number' ? row.difVsAbr : (atual - abr)
     const difVsMai = typeof row.difVsMai === 'number'
@@ -246,7 +245,6 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
         if (dept) departamentos.push({ dept, valor: Number(dl.valor ?? 0) })
       }
     } else if (Array.isArray(row.departamentos)) {
-      // Suporte ao formato novo do n8n que já envia departamentos
       for (const d of row.departamentos) {
         departamentos.push({ dept: ns(d.dept || d.departamento || ''), valor: Number(d.valor ?? 0) })
       }
@@ -258,7 +256,7 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
     const media = mesesValidos.length > 0 ? (mar + abr + mai) / mesesValidos.length : 0
     const varPct = mai > 0 ? ((atual - mai) / mai) * 100 : (atual > 0 ? 100 : 0)
 
-    return {
+    const baseRow: CockpitRow = {
       unidade,
       favorecido,
       categoria,
@@ -279,6 +277,28 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
       vencimento: toDisplayDate(row.vencimento),
       _raw: row,
     }
+
+    // Quando há múltiplos departamentos, cada um vira sua própria linha
+    if (departamentos.length > 1) {
+      return departamentos.map(dept => {
+        const dAtual = dept.valor
+        const dDifVsMai = roundMoney(dAtual - mai)
+        return {
+          ...baseRow,
+          atual: dAtual,
+          difVsAbr: roundMoney(dAtual - abr),
+          difVsMai: dDifVsMai,
+          status: calcStatus(dDifVsMai, tipoMatch),
+          varPct: mai > 0
+            ? Math.round(((dAtual - mai) / mai) * 10000) / 100
+            : (dAtual > 0 ? 100 : 0),
+          departamentos: [dept],
+          qtdDepartamentos: 1,
+        }
+      })
+    }
+
+    return [baseRow]
   })
 }
 
@@ -286,7 +306,8 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of groupDuplicateRows(allRows)) {
-    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
+    const deptKey = row.departamentos[0]?.dept ?? ''
+    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}|||${normalizeKey(deptKey)}`
     if (!map.has(key)) {
       map.set(key, {
         unidade: 'CONSOLIDADO',
@@ -332,7 +353,8 @@ export function groupRowsByUnitConsolidated(rows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of rows) {
-    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
+    const deptKey = row.departamentos[0]?.dept ?? ''
+    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}|||${normalizeKey(deptKey)}`
     if (!map.has(key)) {
       map.set(key, { ...row, departamentos: [], qtdDepartamentos: 0 })
     } else {
@@ -354,7 +376,8 @@ export function groupDuplicateRows(rows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of rows) {
-    const key = `${normalizeKey(row.unidade)}|||${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
+    const deptKey = row.departamentos[0]?.dept ?? ''
+    const key = `${normalizeKey(row.unidade)}|||${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}|||${normalizeKey(deptKey)}`
     if (!map.has(key)) {
       map.set(key, { ...row, departamentos: [...row.departamentos] })
     } else {
