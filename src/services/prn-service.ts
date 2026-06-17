@@ -125,6 +125,18 @@ async function updateRunRecord(id: string, updates: Record<string, any>) {
   }
 }
 
+export async function patchPrnRunMeta(id: string, metaPatch: Record<string, any>) {
+  const supabase = getSupabase()
+  const { data: existing } = await supabase
+    .from('prn_report_runs')
+    .select('meta')
+    .eq('id', id)
+    .single()
+
+  const merged = { ...(existing?.meta || {}), ...metaPatch }
+  await updateRunRecord(id, { meta: merged })
+}
+
 export async function updatePrnRunPayload(id: string, payload: any, meta?: Record<string, any>) {
   const updates: Record<string, any> = {
     result_json: payload,
@@ -193,7 +205,7 @@ export async function getPrnReportData(id: string) {
   const { data, error } = await supabase
     .from('prn_report_runs')
     .select(
-      'id, data_referencia, response_html, meta, result_json, status, error_message, error_code, historical_filename, historical_files',
+      'id, data_referencia, response_html, meta, result_json, status, error_message, error_code, historical_filename, historical_files, daily_filename',
     )
     .eq('id', id)
     .single()
@@ -220,7 +232,61 @@ export async function getPrnReportHtml(id: string) {
   return data.response_html
 }
 
+async function uploadDailyFile(file: File): Promise<string | null> {
+  try {
+    const supabase = getSupabase()
+    const userId = await getCurrentUserId()
+    if (!userId) return null
+
+    const storageName = `${Date.now()}_${sanitizeStorageFilename(file.name)}`
+    const filePath = `${userId}/daily/${storageName}`
+
+    const { error } = await supabase.storage.from('prn_history_files').upload(filePath, file, {
+      contentType: file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      metadata: { originalFilename: file.name },
+    })
+
+    if (error) {
+      console.error('Failed to upload daily file', error)
+      return null
+    }
+
+    return `daily/${storageName}`
+  } catch (err) {
+    console.error('Failed to upload daily file', err)
+    return null
+  }
+}
+
+export async function downloadDailyFile(storageName: string, originalFilename?: string): Promise<void> {
+  const supabase = getSupabase()
+  const userId = await getCurrentUserId()
+  if (!userId) throw new Error('User not authenticated')
+
+  const filePath = `${userId}/${storageName}`
+  const { data, error } = await supabase.storage.from('prn_history_files').download(filePath)
+
+  if (error) throw error
+
+  const name = originalFilename?.trim() || storageName.split('/').pop() || 'diario.xlsx'
+  const url = URL.createObjectURL(data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export async function submitPrnAnalysisJson(formData: FormData) {
+  const dailyFile = formData.get('daily_file')
+  let dailyFileStorageName: string | null = null
+  let dailyFileOriginalName: string | null = null
+
+  if (dailyFile instanceof File) {
+    dailyFileOriginalName = dailyFile.name
+    dailyFileStorageName = await uploadDailyFile(dailyFile)
+  }
+
   const runRecord = await createRunRecord(formData)
   const startedAt = Date.now()
 
@@ -258,6 +324,13 @@ export async function submitPrnAnalysisJson(formData: FormData) {
       throw new Error(`Resposta inválida do motor de análise: ${response.status}`)
     }
 
+    const mergedMeta = {
+      ...(typeof data === 'object' ? (data.meta || {}) : {}),
+      httpStatus: response.status,
+      ...(dailyFileStorageName ? { daily_file_storage_name: dailyFileStorageName } : {}),
+      ...(dailyFileOriginalName ? { daily_file_original_name: dailyFileOriginalName } : {}),
+    }
+
     await updateRunRecord(runRecord.id, {
       status: 'success',
       webhook_http_status: response.status,
@@ -265,10 +338,10 @@ export async function submitPrnAnalysisJson(formData: FormData) {
       duration_ms: durationMs,
       response_html: data.html || null,
       result_json: typeof data === 'object' ? data : null,
-      meta: typeof data === 'object' ? { ...(data.meta || {}), httpStatus: response.status } : null,
+      meta: mergedMeta,
     })
 
-    return { ...data, _runId: runRecord.id }
+    return { ...data, _runId: runRecord.id, meta: mergedMeta }
   } catch (error: any) {
     const durationMs = Date.now() - startedAt
 

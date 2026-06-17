@@ -50,7 +50,7 @@ export default function Login() {
     setIsSubmitting(true)
     try {
       await login(email, password)
-      navigate('/dashboard')
+      navigate('/analise-prn')
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -77,7 +77,7 @@ export default function Login() {
           <p className="text-sm text-muted-foreground mt-2">Controle Inteligente de Pagamentos</p>
         </div>
 
-        <Card className="border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] backdrop-blur-xl text-white shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        <Card className="border-gray-200 bg-white text-gray-900 shadow-md">
           <CardHeader>
             <CardTitle>Acesso ao Sistema</CardTitle>
             <CardDescription>Insira suas credenciais corporativas</CardDescription>

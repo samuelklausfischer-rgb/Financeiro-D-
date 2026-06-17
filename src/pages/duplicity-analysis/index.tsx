@@ -56,14 +56,14 @@ export default function DuplicityAnalysis() {
   }
 
   return (
-    <div className="relative flex-1 min-h-screen p-8 text-white bg-[#09090b]">
+    <div className="relative flex-1 min-h-screen p-8 text-gray-900 bg-gray-50">
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between space-y-2 mb-8">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
               Análise de Duplicidade
             </h2>
-            <p className="text-white/60">
+            <p className="text-gray-500">
               Identifique duplicidades e revise lançamentos suspeitos em planilhas com auxílio de
               IA.
             </p>

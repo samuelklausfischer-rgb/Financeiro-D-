@@ -47,7 +47,7 @@ export function ErrorState({ error, onReset }: { error: any; onReset: () => void
       <Button
         onClick={onReset}
         size="lg"
-        className="bg-gray-900 hover:bg-gray-800 text-white font-medium"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
       >
         <RefreshCw className="mr-2 h-5 w-5" /> Tentar Novamente
       </Button>

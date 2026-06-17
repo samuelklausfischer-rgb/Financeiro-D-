@@ -63,21 +63,21 @@ export function PrnSummaryCards({
       value: totalDespesas,
       icon: TrendingDown,
       color: 'text-[#DC3545]',
-      glow: 'shadow-[#DC3545]/20',
+      glow: 'shadow-[#DC3545]/10',
     },
     {
       label: 'Total Recebido',
       value: totalRecebido,
       icon: TrendingUp,
       color: 'text-[#28A745]',
-      glow: 'shadow-[#28A745]/20',
+      glow: 'shadow-[#28A745]/10',
     },
     {
       label: 'Saldo Bancário',
       value: summary?.saldoBancario ?? summary?.bankBalance ?? summary?.saldo_bancario ?? 0,
       icon: Landmark,
       color: 'text-[#0066CC]',
-      glow: 'shadow-[#0066CC]/20',
+      glow: 'shadow-[#0066CC]/10',
     },
     {
       label: 'Transferência Necessária',
@@ -88,32 +88,32 @@ export function PrnSummaryCards({
         0,
       icon: ArrowRightLeft,
       color: 'text-[#FF9800]',
-      glow: 'shadow-[#FF9800]/20',
+      glow: 'shadow-[#FF9800]/10',
     },
   ]
 
   const alerts = [
-    { label: 'Alertas Críticos', count: alertasCriticos, color: 'text-red-400', bg: 'bg-red-400/10' },
-    { label: 'Classificação Pendente', count: classificacaoPendente, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-    { label: 'Estáveis', count: estaveis, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-    { label: 'Novos Registros', count: novosRegistros, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: 'Alertas Críticos', count: alertasCriticos, color: 'text-red-600', bg: 'bg-red-100' },
+    { label: 'Classificação Pendente', count: classificacaoPendente, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { label: 'Estáveis', count: estaveis, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { label: 'Novos Registros', count: novosRegistros, color: 'text-blue-600', bg: 'bg-blue-100' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-2 animate-fade-in-up">
         {cards.map((c, i) => (
-          <Card 
-            key={i} 
+          <Card
+            key={i}
             className={cn(
-              "hover-glass transition-all duration-300 border-white/5",
-              "hover:scale-[1.02] hover:shadow-lg",
+              "bg-white border-gray-200 transition-all duration-300",
+              "hover:scale-[1.02] hover:shadow-md",
               c.glow
             )}
             style={{ animationDelay: `${i * 0.1}s` }}
           >
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 px-4 pt-4">
-              <CardTitle className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+              <CardTitle className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 {c.label}
               </CardTitle>
               <c.icon className={cn("h-4 w-4", c.color)} />
@@ -123,7 +123,7 @@ export function PrnSummaryCards({
                 {formatCurrency(c.value || 0)}
               </div>
               {c.label === 'Total Recebido' && totalRecebidoInconsistente && (
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-amber-600">
                   Valor retornado pelo motor com datas de recebimento fora do mes da planilha.
                 </p>
               )}
@@ -134,9 +134,9 @@ export function PrnSummaryCards({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         {alerts.map((a, i) => (
-          <div key={i} className={cn("flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all")}>
+          <div key={i} className={cn("flex items-center justify-between p-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all")}>
              <div className="space-y-0.5">
-               <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">{a.label}</p>
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{a.label}</p>
                <p className={cn("text-xl font-black tracking-tighter", a.color)}>{a.count}</p>
              </div>
              <div className={cn("p-2 rounded-lg", a.bg)}>

@@ -32,7 +32,7 @@ const App = () => (
           <Route element={<ProtectedRoute />}>
             <Route path="/analysis-results" element={<AnalysisResults />} />
             <Route element={<RootLayout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/analise-prn" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/recebedores" element={<Payees />} />
               <Route path="/pagamentos" element={<Payments />} />

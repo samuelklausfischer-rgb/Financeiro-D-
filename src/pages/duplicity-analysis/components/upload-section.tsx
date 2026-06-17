@@ -85,7 +85,7 @@ export function UploadSection({
   }
 
   return (
-    <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white shadow-xl relative overflow-hidden">
+    <Card className="bg-white border-gray-200 text-gray-900 shadow-md relative overflow-hidden">
       <CardHeader>
         <CardTitle className="text-xl">Nova análise</CardTitle>
       </CardHeader>
@@ -94,8 +94,8 @@ export function UploadSection({
           className={cn(
             'flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg transition-colors',
             isUploading
-              ? 'border-blue-500/50 bg-blue-500/10 pointer-events-none'
-              : 'border-white/20 bg-black/20 hover:bg-black/40',
+              ? 'border-blue-400 bg-blue-50 pointer-events-none'
+              : 'border-gray-300 bg-gray-50 hover:bg-gray-100',
           )}
         >
           <input
@@ -111,18 +111,18 @@ export function UploadSection({
               className="text-center cursor-pointer w-full py-8"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload className="mx-auto h-12 w-12 text-white/50 mb-4" />
-              <p className="text-sm text-white/70">
+              <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-sm text-gray-600">
                 Clique para selecionar ou arraste um arquivo .xlsx
               </p>
             </div>
           ) : (
             <div className="text-center w-full py-4">
-              <FileIcon className="mx-auto h-12 w-12 text-blue-400 mb-4" />
-              <p className="text-sm font-medium mb-6">{file.name}</p>
+              <FileIcon className="mx-auto h-12 w-12 text-blue-600 mb-4" />
+              <p className="text-sm font-medium mb-6 text-gray-800">{file.name}</p>
 
               {isUploading ? (
-                <div className="flex flex-col items-center justify-center gap-4 text-blue-400 py-4">
+                <div className="flex flex-col items-center justify-center gap-4 text-blue-600 py-4">
                   <div className="relative">
                     <Loader2 className="h-10 w-10 animate-spin" />
                     <div className="absolute inset-0 border-t-2 border-blue-400 rounded-full animate-ping opacity-20"></div>
@@ -131,7 +131,7 @@ export function UploadSection({
                     <p className="text-base font-medium animate-pulse">
                       Analisando arquivo via IA...
                     </p>
-                    <p className="text-xs text-blue-400/70">
+                    <p className="text-xs text-blue-500">
                       Este processo pode levar alguns minutos. Por favor, não feche esta página.
                     </p>
                   </div>
@@ -140,7 +140,7 @@ export function UploadSection({
                 <div className="flex gap-4 justify-center">
                   <Button
                     variant="outline"
-                    className="text-black bg-white/90 hover:bg-white"
+                    className="text-gray-700 border-gray-300 hover:bg-gray-100"
                     onClick={() => setFile(null)}
                   >
                     Cancelar

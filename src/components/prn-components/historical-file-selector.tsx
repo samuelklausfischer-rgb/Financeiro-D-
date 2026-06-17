@@ -203,10 +203,10 @@ export function HistoricalFileSelector({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-gray-600">
             Cofre de Históricos
           </h4>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/20">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             {selection.saved.length} do cofre e {selection.temporary.length} temporários selecionados
           </p>
         </div>
@@ -216,7 +216,7 @@ export function HistoricalFileSelector({
           size="sm"
           onClick={fetchFiles}
           disabled={isLoading || isUploading}
-          className="h-7 w-7 p-0 text-white/40 hover:text-white"
+          className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700"
         >
           <Loader2 className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
         </Button>
@@ -233,26 +233,26 @@ export function HistoricalFileSelector({
               className={cn(
                 'group flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all',
                 isSelected
-                  ? 'border-blue-500/40 bg-blue-500/10'
-                  : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]',
+                  ? 'border-blue-300 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50',
               )}
             >
               <div className="flex items-center gap-3 overflow-hidden">
                 {isSelected ? (
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-400" />
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />
                 ) : (
-                  <FileSpreadsheet className="h-5 w-5 shrink-0 text-white/30 group-hover:text-blue-400/50 transition-colors" />
+                  <FileSpreadsheet className="h-5 w-5 shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 )}
                 <div className="min-w-0 flex-1">
                   <div
                     className={cn(
                       'truncate text-sm font-bold',
-                      isSelected ? 'text-white' : 'text-white/70',
+                      isSelected ? 'text-blue-700' : 'text-gray-700',
                     )}
                   >
                     {file.originalFilename}
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">
+                  <div className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">
                     Salvo em {file.created_at ? format(new Date(file.created_at), 'dd/MM/yyyy HH:mm') : '-'}
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export function HistoricalFileSelector({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => handleDelete(file.name, e)}
-                className="h-8 w-8 shrink-0 p-0 text-white/20 hover:bg-red-500/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                className="h-8 w-8 shrink-0 p-0 text-gray-300 hover:bg-red-50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -271,14 +271,14 @@ export function HistoricalFileSelector({
         })}
 
         {files.length === 0 && !isLoading && (
-          <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-sm text-white/40">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-400">
             Nenhum histórico salvo no cofre.
           </div>
         )}
       </div>
 
-      <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white hover:bg-white/[0.06] transition-all">
-        <UploadCloud className="h-4 w-4 text-blue-400" />
+      <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700 hover:bg-blue-100 transition-all">
+        <UploadCloud className="h-4 w-4 text-blue-600" />
         {isUploading ? 'Salvando no cofre...' : 'Fazer upload de novos históricos no cofre'}
         <input
           type="file"
@@ -290,12 +290,12 @@ export function HistoricalFileSelector({
         />
       </label>
 
-      <div className="space-y-3 border-t border-white/5 pt-4">
+      <div className="space-y-3 border-t border-gray-100 pt-4">
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-gray-600">
             Arquivos Temporários
           </h4>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/20">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             Entra apenas nesta execução e pode ser combinado com o cofre.
           </p>
         </div>
@@ -305,13 +305,13 @@ export function HistoricalFileSelector({
             {selection.temporary.map((file) => (
               <div
                 key={buildTempFileKey(file)}
-                className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3"
+                className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-400" />
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-600" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-white">{file.name}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-amber-400/60 mt-0.5">
+                    <div className="truncate text-sm font-bold text-amber-800">{file.name}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-amber-500 mt-0.5">
                       Apenas para esta execução
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export function HistoricalFileSelector({
                   variant="ghost"
                   size="sm"
                   onClick={() => removeTemporaryFile(file)}
-                  className="h-8 w-8 p-0 text-amber-400/60 hover:bg-amber-500/20 hover:text-amber-400"
+                  className="h-8 w-8 p-0 text-amber-500 hover:bg-amber-100 hover:text-amber-700"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -329,12 +329,12 @@ export function HistoricalFileSelector({
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-white/10 bg-transparent p-4 text-center text-sm font-bold text-white/40">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-transparent p-4 text-center text-sm font-bold text-gray-400">
             Nenhum arquivo temporário selecionado.
           </div>
         )}
 
-        <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 bg-transparent px-4 py-3 text-sm font-bold text-white/50 hover:bg-white/[0.02] hover:text-white transition-all">
+        <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-transparent px-4 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all">
           Usar arquivos temporários sem salvar
           <input
             type="file"

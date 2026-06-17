@@ -134,14 +134,14 @@ export function HistoryTable({
 
   return (
     <>
-      <Card className="bg-zinc-900 border-white/10 text-white shadow-xl">
+      <Card className="bg-white border-gray-200 text-gray-900 shadow-md">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">Histórico de análises</CardTitle>
           <Button
             variant="destructive"
             size="sm"
             onClick={() => setIsClearAllOpen(true)}
-            className="bg-red-500/20 text-red-400 hover:bg-red-500/40 hover:text-red-300 border border-red-500/30"
+            className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Zerar Histórico
@@ -153,10 +153,10 @@ export function HistoryTable({
               placeholder="Buscar por arquivo..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-black/40 border-white/10 text-white w-full sm:w-auto flex-1 min-w-[200px]"
+              className="bg-white border-gray-200 text-gray-800 w-full sm:w-auto flex-1 min-w-[200px]"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px] bg-black/40 border-white/10 text-white">
+              <SelectTrigger className="w-[180px] bg-white border-gray-200 text-gray-800">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -167,45 +167,45 @@ export function HistoryTable({
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
-              <span className="text-white/50 text-sm">De:</span>
+              <span className="text-gray-500 text-sm">De:</span>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-black/40 border-white/10 text-white w-auto"
+                className="bg-white border-gray-200 text-gray-800 w-auto"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-white/50 text-sm">Até:</span>
+              <span className="text-gray-500 text-sm">Até:</span>
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-black/40 border-white/10 text-white w-auto"
+                className="bg-white border-gray-200 text-gray-800 w-auto"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/10 overflow-x-auto">
-            <Table className="text-white/80">
+          <div className="rounded-md border border-gray-200 overflow-x-auto">
+            <Table className="text-gray-700">
               <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60 whitespace-nowrap">Data</TableHead>
-                  <TableHead className="text-white/60">Arquivo</TableHead>
-                  <TableHead className="text-white/60">Usuário</TableHead>
-                  <TableHead className="text-white/60">Status</TableHead>
-                  <TableHead className="text-white/60 text-right">Total</TableHead>
-                  <TableHead className="text-white/60 text-right">Duplicidades</TableHead>
-                  <TableHead className="text-white/60 text-right">Grupos</TableHead>
-                  <TableHead className="text-white/60 text-right whitespace-nowrap">
+                <TableRow className="border-gray-200 hover:bg-transparent bg-gray-50">
+                  <TableHead className="text-gray-500 whitespace-nowrap">Data</TableHead>
+                  <TableHead className="text-gray-500">Arquivo</TableHead>
+                  <TableHead className="text-gray-500">Usuário</TableHead>
+                  <TableHead className="text-gray-500">Status</TableHead>
+                  <TableHead className="text-gray-500 text-right">Total</TableHead>
+                  <TableHead className="text-gray-500 text-right">Duplicidades</TableHead>
+                  <TableHead className="text-gray-500 text-right">Grupos</TableHead>
+                  <TableHead className="text-gray-500 text-right whitespace-nowrap">
                     Total Manual
                   </TableHead>
-                  <TableHead className="text-white/60 text-right">Ações</TableHead>
+                  <TableHead className="text-gray-500 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {records.map((r) => (
-                  <TableRow key={r.id} className="border-white/10 hover:bg-white/5">
+                  <TableRow key={r.id} className="border-gray-200 hover:bg-gray-50">
                     <TableCell className="whitespace-nowrap">
                       {format(new Date(r.created), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                     </TableCell>
@@ -222,7 +222,7 @@ export function HistoryTable({
                               ? 'destructive'
                               : 'secondary'
                         }
-                        className={r.status === 'completed' ? 'bg-green-600' : ''}
+                        className={r.status === 'completed' ? 'bg-green-600 text-white' : ''}
                       >
                         {r.status}
                       </Badge>
@@ -239,7 +239,7 @@ export function HistoryTable({
                           variant="ghost"
                           size="sm"
                           onClick={() => onViewDetails(r.id)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-white/5"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           Ver detalhes
                         </Button>
@@ -247,7 +247,7 @@ export function HistoryTable({
                           variant="ghost"
                           size="icon"
                           onClick={() => setItemToDelete(r.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-white/5 h-8 w-8"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
                           title="Apagar planilha"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -257,8 +257,8 @@ export function HistoryTable({
                   </TableRow>
                 ))}
                 {records.length === 0 && (
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableCell colSpan={9} className="text-center py-8 text-white/50">
+                  <TableRow className="border-gray-200 hover:bg-transparent">
+                    <TableCell colSpan={9} className="text-center py-8 text-gray-400">
                       Nenhuma análise encontrada com os filtros atuais.
                     </TableCell>
                   </TableRow>
@@ -273,17 +273,17 @@ export function HistoryTable({
               size="sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-              className="bg-black/40 border-white/10 text-white hover:bg-white/10 hover:text-white"
+              className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
             >
               Anterior
             </Button>
-            <span className="text-sm text-white/50">Página {page}</span>
+            <span className="text-sm text-gray-500">Página {page}</span>
             <Button
               variant="outline"
               size="sm"
               disabled={!hasMore}
               onClick={() => setPage((p) => p + 1)}
-              className="bg-black/40 border-white/10 text-white hover:bg-white/10 hover:text-white"
+              className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
             >
               Próxima
             </Button>
@@ -292,10 +292,10 @@ export function HistoryTable({
       </Card>
 
       <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-white/10 text-white">
+        <AlertDialogContent className="bg-white border-gray-200 text-gray-900">
           <AlertDialogHeader>
             <AlertDialogTitle>Apagar Planilha</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-gray-500">
               Tem certeza que deseja apagar esta planilha? Esta ação não pode ser desfeita e
               removerá todos os dados de análise associados a ela.
             </AlertDialogDescription>
@@ -303,7 +303,7 @@ export function HistoryTable({
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isProcessing}
-              className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-white text-white"
+              className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
             >
               Cancelar
             </AlertDialogCancel>
@@ -322,10 +322,10 @@ export function HistoryTable({
       </AlertDialog>
 
       <AlertDialog open={isClearAllOpen} onOpenChange={setIsClearAllOpen}>
-        <AlertDialogContent className="bg-zinc-900 border-white/10 text-white">
+        <AlertDialogContent className="bg-white border-gray-200 text-gray-900">
           <AlertDialogHeader>
             <AlertDialogTitle>Zerar Histórico</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-gray-500">
               Tem certeza que deseja apagar todas as planilhas? Esta ação não pode ser desfeita e
               todo o seu histórico de análises será perdido.
             </AlertDialogDescription>
@@ -333,7 +333,7 @@ export function HistoryTable({
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isProcessing}
-              className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-white text-white"
+              className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
             >
               Cancelar
             </AlertDialogCancel>

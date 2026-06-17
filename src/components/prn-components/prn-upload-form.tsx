@@ -67,9 +67,9 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
           name="reference_date"
           render={({ field }) => (
             <FormItem className="flex flex-col space-y-3">
-              <FormLabel className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                Data de Referência 
-                <span className="text-white/30 font-medium lowercase tracking-normal text-xs">(opcional)</span>
+              <FormLabel className="text-gray-800 font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                Data de Referência
+                <span className="text-gray-400 font-medium lowercase tracking-normal text-xs">(opcional)</span>
               </FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
@@ -77,9 +77,9 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
                     <Button
                       variant={'outline'}
                       className={cn(
-                        'w-full max-w-md pl-4 text-left font-bold border-white/10 h-14 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all',
-                        !field.value && 'text-white/40',
-                        field.value && 'text-blue-400 border-blue-500/30 bg-blue-500/5'
+                        'w-full max-w-md pl-4 text-left font-bold border-gray-200 h-14 rounded-2xl bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all',
+                        !field.value && 'text-gray-400',
+                        field.value && 'text-blue-600 border-blue-300 bg-blue-50'
                       )}
                     >
                       {field.value ? (
@@ -93,7 +93,7 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-white/10 shadow-2xl" align="start">
+                <PopoverContent className="w-auto p-0 bg-white border-gray-200 shadow-lg" align="start">
                   <Calendar
                     mode="single"
                     selected={field.value}
@@ -104,7 +104,7 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
                   />
                 </PopoverContent>
               </Popover>
-              <FormMessage className="text-red-400 text-xs font-bold uppercase" />
+              <FormMessage className="text-red-500 text-xs font-bold uppercase" />
             </FormItem>
           )}
         />
@@ -120,7 +120,7 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
             name="historical_files"
             render={({ field }) => (
               <FormItem className="space-y-4">
-                <FormLabel className="text-white font-bold text-sm uppercase tracking-widest block">
+                <FormLabel className="text-gray-800 font-bold text-sm uppercase tracking-widest block">
                   Arquivo Histórico
                 </FormLabel>
                 <FormControl>
@@ -129,24 +129,24 @@ export function PrnUploadForm({ onSubmit }: { onSubmit: (v: z.infer<typeof formS
                     onChange={field.onChange}
                   />
                 </FormControl>
-                <FormMessage className="text-red-400 text-xs font-bold uppercase" />
+                <FormMessage className="text-red-500 text-xs font-bold uppercase" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="pt-8 border-t border-white/5 flex justify-end">
+        <div className="pt-8 border-t border-gray-100 flex justify-end">
           <Button
             type="submit"
             className={cn(
-              "h-14 px-10 rounded-2xl font-bold text-base transition-all active:scale-[0.98] shadow-lg",
-              !isSubmitDisabled 
-                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20" 
-                : "bg-white/5 text-white/20 border-white/5 cursor-not-allowed"
+              "h-14 px-10 rounded-2xl font-bold text-base transition-all active:scale-[0.98] shadow-sm",
+              !isSubmitDisabled
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                : "bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed"
             )}
             disabled={isSubmitDisabled}
           >
-            <Play className={cn("mr-2 h-5 w-5 fill-current", !isSubmitDisabled ? "text-white" : "text-white/10")} /> 
+            <Play className={cn("mr-2 h-5 w-5 fill-current", !isSubmitDisabled ? "text-white" : "text-gray-300")} />
             Iniciar Motor de Regras
           </Button>
         </div>

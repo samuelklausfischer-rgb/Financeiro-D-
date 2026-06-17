@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { format } from 'date-fns'
-import { RefreshCw, ArrowLeft, BrainCircuit } from 'lucide-react'
+import { RefreshCw, ArrowLeft, BrainCircuit, ScanSearch } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,13 +14,16 @@ import {
   downloadHistoryFile,
   updatePrnRunPayload,
   markPrnRunAsError,
+  patchPrnRunMeta,
 } from '@/services/prn-service'
+import { createAnalise, getAnalise, type AnalysisRecord } from '@/services/analise-duplicidade'
 import { useToast } from '@/hooks/use-toast'
 
 import { LoadingState, ErrorState } from '@/components/prn-components/prn-states'
 import { PrnUploadForm, formSchema } from '@/components/prn-components/prn-upload-form'
 import { PrnHistoryTable } from '@/components/prn-components/prn-history-table'
 import { PrnReportView } from '@/components/prn-components/prn-report-view'
+import { ResultsDashboard } from '@/pages/duplicity-analysis/components/dashboard'
 import { parsePrnDailyReceipts } from '@/lib/prn-daily-parser'
 import { extractHistoricalRows } from '@/lib/prn-history-workbook'
 
@@ -87,6 +90,7 @@ export default function PrnAnalysis() {
   const [errorDetails, setErrorDetails] = useState<{ message: string; technical?: string } | null>(
     null,
   )
+  const [duplicityAnalysis, setDuplicityAnalysis] = useState<AnalysisRecord | null>(null)
   const [historyRuns, setHistoryRuns] = useState<any[]>([])
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [formKey, setFormKey] = useState(0)
@@ -111,7 +115,8 @@ export default function PrnAnalysis() {
     setUiState('upload')
     setReportData(null)
     setErrorDetails(null)
-    setFormKey((k) => k + 1) // Full reset of the form
+    setDuplicityAnalysis(null)
+    setFormKey((k) => k + 1)
   }
 
   const handleDeleteHistory = async (id: string) => {
@@ -136,6 +141,7 @@ export default function PrnAnalysis() {
     try {
       setUiState('loading')
       setErrorDetails(null)
+      setDuplicityAnalysis(null)
 
       const dailyFile = values.daily_file[0] as File
       const historicalSelection = values.historical_files || { saved: [], temporary: [] }
@@ -188,8 +194,6 @@ export default function PrnAnalysis() {
         fileToBase64(dailyFile),
       ])
 
-      // Detecta se o payload contém o novo formato consolidado (3 blocos por arquivo)
-      // O novo formato gera sheetNames com sufixo ::MATRIZ, ::CAMBORIU ou ::PALHOCA
       const isConsolidatedFormat = historicalRows.some(
         (sheet) =>
           sheet.sheetName.includes('::MATRIZ') ||
@@ -214,6 +218,12 @@ export default function PrnAnalysis() {
       formData.append('historical_format', isConsolidatedFormat ? 'consolidated_v2' : 'legacy_v1')
       if (refDateStr) formData.append('reference_date', refDateStr)
 
+      // Dispara PRN e duplicidade em paralelo com o mesmo arquivo diário
+      const duplicityPromise = createAnalise(dailyFile).catch((err) => {
+        console.error('Duplicity analysis failed:', err)
+        return null
+      })
+
       const response = await submitPrnAnalysisJson(formData)
       serverRunId = response._runId || null
 
@@ -235,8 +245,20 @@ export default function PrnAnalysis() {
       }
 
       setReportData({ ...normalized.payload, meta: response.meta || normalized.payload.meta })
+
+      // Aguarda duplicidade (geralmente já concluiu enquanto PRN processava)
+      const duplicityRecord = await duplicityPromise
+      if (duplicityRecord) {
+        setDuplicityAnalysis(duplicityRecord)
+        if (serverRunId) {
+          patchPrnRunMeta(serverRunId, { duplicity_analysis_id: duplicityRecord.id }).catch(
+            (err) => console.error('Failed to save duplicity_analysis_id:', err),
+          )
+        }
+      }
+
       setUiState('report')
-      toast({ title: 'Sucesso', description: 'Análise PRN gerada com sucesso!' })
+      toast({ title: 'Sucesso', description: 'Análise PRN e Duplicidade geradas com sucesso!' })
     } catch (error: any) {
       if (serverRunId) {
         try {
@@ -270,6 +292,7 @@ export default function PrnAnalysis() {
   }
 
   const handleOpenHistory = async (record: any) => {
+    setDuplicityAnalysis(null)
     if (record.status === 'error') {
       setUiState('error')
       setErrorDetails({
@@ -295,6 +318,14 @@ export default function PrnAnalysis() {
             : parsedModel.reportModel || parsedModel
         setReportData({ ...payload, meta: { ...runData.meta, data_referencia: runData.data_referencia } })
         setUiState('report')
+
+        // Restaura análise de duplicidade vinculada, se existir
+        const duplicityId = runData.meta?.duplicity_analysis_id
+        if (duplicityId) {
+          getAnalise(duplicityId)
+            .then((record) => setDuplicityAnalysis(record))
+            .catch((err) => console.error('Failed to load duplicity analysis from history:', err))
+        }
       } else {
         throw new Error('Conteúdo do relatório não encontrado.')
       }
@@ -306,7 +337,7 @@ export default function PrnAnalysis() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-10 h-full max-w-[1600px] mx-auto w-full animate-in fade-in duration-1000">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/5 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-gray-200 pb-10">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             {uiState !== 'upload' && (
@@ -314,7 +345,7 @@ export default function PrnAnalysis() {
                 variant="ghost"
                 size="icon"
                 onClick={handleReset}
-                className="h-10 w-10 text-white/40 hover:text-white hover:bg-white/10 rounded-2xl transition-all"
+                className="h-10 w-10 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-2xl transition-all"
               >
                 <ArrowLeft className="h-6 w-6" />
               </Button>
@@ -324,14 +355,14 @@ export default function PrnAnalysis() {
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black tracking-tighter text-white">Análise PRN</h1>
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900">Análise PRN</h1>
                 <Badge
-                  className="bg-blue-500/10 text-blue-400 border-blue-500/20 font-black px-3 py-1 rounded-lg text-xs tracking-widest"
+                  className="bg-blue-100 text-blue-600 border-blue-200 font-black px-3 py-1 rounded-lg text-xs tracking-widest"
                 >
                   ENGINE V2
                 </Badge>
               </div>
-              <p className="text-white/40 font-bold uppercase text-[10px] tracking-[0.2em] mt-1 pl-1">
+              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-1 pl-1">
                  Motor de Inteligência Financeira e Auditoria Cruzada
               </p>
             </div>
@@ -350,20 +381,46 @@ export default function PrnAnalysis() {
 
       {uiState === 'loading' && <LoadingState />}
       {uiState === 'error' && <ErrorState error={errorDetails} onReset={handleReset} />}
-      {uiState === 'report' && <PrnReportView data={reportData} />}
+      {uiState === 'report' && (
+        <>
+          <PrnReportView data={reportData} duplicityAnalysis={duplicityAnalysis ?? undefined} />
+
+          {duplicityAnalysis && (
+            <div className="mt-16 border-t border-gray-200 pt-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-purple-100 rounded-2xl border border-purple-200">
+                  <ScanSearch className="h-7 w-7 text-purple-600" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-3xl font-black tracking-tighter text-gray-900">Análise de Duplicidade</h2>
+                    <Badge className="bg-purple-100 text-purple-600 border-purple-200 font-black px-3 py-1 rounded-lg text-xs tracking-widest">
+                      {duplicityAnalysis.file_name}
+                    </Badge>
+                  </div>
+                  <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-1 pl-1">
+                    Detecção automática de lançamentos duplicados e suspeitos
+                  </p>
+                </div>
+              </div>
+              <ResultsDashboard analysis={duplicityAnalysis} />
+            </div>
+          )}
+        </>
+      )}
 
       {uiState === 'upload' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="lg:col-span-7 xl:col-span-8">
-            <Card className="hover-glass border-white/5 shadow-2xl overflow-hidden">
-              <CardHeader className="bg-white/[0.03] border-b border-white/5 pb-8 pt-8 px-8">
+            <Card className="border-gray-200 shadow-md overflow-hidden bg-white">
+              <CardHeader className="bg-gray-50 border-b border-gray-100 pb-8 pt-8 px-8">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                    <RefreshCw className="h-6 w-6 text-blue-400 animate-spin-slow" />
+                  <div className="p-3 bg-blue-100 rounded-2xl border border-blue-200">
+                    <RefreshCw className="h-6 w-6 text-blue-600 animate-spin-slow" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl font-bold text-white tracking-tight">Nova Execução de Análise</CardTitle>
-                    <CardDescription className="text-white/50 text-sm mt-1 font-medium">
+                    <CardTitle className="text-2xl font-bold text-gray-900 tracking-tight">Nova Execução de Análise</CardTitle>
+                    <CardDescription className="text-gray-500 text-sm mt-1 font-medium">
                       Processe seus arquivos diários e históricos com o motor de regras PRN V2.
                     </CardDescription>
                   </div>

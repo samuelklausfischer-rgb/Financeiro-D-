@@ -49,8 +49,8 @@ export function PrnDetails({
   const renderTable = (data: any[], columns: ColumnDef[], emptyMessage?: string) => {
     if (!data || data.length === 0) {
       return (
-        <div className="p-20 text-center bg-white/[0.02] border border-dashed border-white/10 rounded-2xl">
-          <p className="text-white/30 font-bold uppercase text-[10px] tracking-widest">
+        <div className="p-20 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl">
+          <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">
             {emptyMessage || 'Nenhum registro encontrado'}
           </p>
         </div>
@@ -71,18 +71,18 @@ export function PrnDetails({
 
     return (
       <div className="space-y-8">
-        <div className="bg-emerald-600/10 border border-emerald-600/20 rounded-xl p-4">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-emerald-400 font-bold uppercase text-xs tracking-widest">SERVIÇOS</h4>
-            <span className="text-emerald-400 font-black text-lg">{formatCurrency(servicosTotal)}</span>
+            <h4 className="text-emerald-700 font-bold uppercase text-xs tracking-widest">SERVIÇOS</h4>
+            <span className="text-emerald-700 font-black text-lg">{formatCurrency(servicosTotal)}</span>
           </div>
           {renderTable(servicos, catCols, 'Nenhum serviço registrado')}
         </div>
 
-        <div className="bg-purple-600/10 border border-purple-600/20 rounded-xl p-4">
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-purple-400 font-bold uppercase text-xs tracking-widest">REEMBOLSO</h4>
-            <span className="text-purple-400 font-black text-lg">{formatCurrency(reembolsosTotal)}</span>
+            <h4 className="text-purple-700 font-bold uppercase text-xs tracking-widest">REEMBOLSO</h4>
+            <span className="text-purple-700 font-black text-lg">{formatCurrency(reembolsosTotal)}</span>
           </div>
           {renderTable(reembolsos, catCols, 'Nenhum reembolso registrado')}
         </div>
@@ -94,17 +94,17 @@ export function PrnDetails({
 
   return (
     <div className="space-y-6 mt-10 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
-        <h3 className="text-xl font-bold text-white flex items-center gap-3">
-          <div className="p-2 bg-blue-500/10 rounded-lg">
-            <FileText className="h-5 w-5 text-blue-400" />
+      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <FileText className="h-5 w-5 text-blue-600" />
           </div>
           Detalhamento Adicional
         </h3>
       </div>
       
       <Tabs defaultValue="receipts" className="w-full">
-        <TabsList className="mb-6 bg-white/[0.03] p-1.5 flex-wrap h-auto justify-start border border-white/5 rounded-2xl backdrop-blur-sm">
+        <TabsList className="mb-6 bg-white p-1.5 flex-wrap h-auto justify-start border border-gray-200 rounded-2xl shadow-sm">
           <TabsTrigger value="receipts" className="rounded-xl data-[state=active]:bg-emerald-600 data-[state=active]:text-white font-bold text-xs uppercase tracking-widest px-6 py-2.5 transition-all">
             <TrendingUp className="h-3.5 w-3.5 mr-2 opacity-70" /> Recebimentos
           </TabsTrigger>
@@ -113,7 +113,7 @@ export function PrnDetails({
           <TabsTrigger value="entities" className="rounded-xl font-bold text-xs uppercase tracking-widest px-6 py-2.5">Entidades</TabsTrigger>
         </TabsList>
 
-        <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+        <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
           Recebimentos e contas exibem somente os lancamentos do dia analisado.
         </p>
 

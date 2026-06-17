@@ -37,10 +37,8 @@ export function PrnHistoryTable({
 
   const formatReferenceDate = (value?: string | null) => {
     if (!value) return '-'
-
     const parsed = new Date(`${value}T12:00:00Z`)
     if (Number.isNaN(parsed.getTime())) return value
-
     return format(parsed, 'dd/MM/yyyy', { locale: ptBR })
   }
 
@@ -57,18 +55,18 @@ export function PrnHistoryTable({
 
   return (
     <>
-      <Card className="hover-glass border-white/5 text-white shadow-2xl overflow-hidden">
-        <CardHeader className="bg-white/[0.03] border-b border-white/5 py-6 flex flex-row items-center justify-between px-6">
-          <CardTitle className="text-base font-bold flex items-center gap-3 m-0 uppercase tracking-widest text-white/70">
-            <div className="p-2 bg-white/5 rounded-lg">
-              <History className="h-4 w-4 text-blue-400" />
+      <Card className="bg-white border-gray-200 text-gray-900 shadow-md overflow-hidden">
+        <CardHeader className="bg-gray-50 border-b border-gray-200 py-6 flex flex-row items-center justify-between px-6">
+          <CardTitle className="text-base font-bold flex items-center gap-3 m-0 uppercase tracking-widest text-gray-500">
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <History className="h-4 w-4 text-blue-600" />
             </div>
             Histórico
           </CardTitle>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-white/40 hover:bg-white/10 hover:text-white rounded-xl transition-all"
+            className="h-9 w-9 text-gray-400 hover:bg-gray-100 hover:text-gray-700 rounded-xl transition-all"
             onClick={fetchHistory}
             disabled={isHistoryLoading}
           >
@@ -76,26 +74,26 @@ export function PrnHistoryTable({
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-[600px] overflow-auto custom-scrollbar">
+          <div className="max-h-[600px] overflow-auto">
             <Table>
-              <TableHeader className="bg-transparent sticky top-0 z-10 backdrop-blur-md">
-                <TableRow className="hover:bg-transparent border-white/5">
-                  <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/30 pl-6 py-4">Data da Planilha</TableHead>
-                  <TableHead className="font-bold text-[10px] uppercase tracking-widest text-white/30">Status</TableHead>
-                  <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-white/30 pr-6">Ações</TableHead>
+              <TableHeader className="bg-gray-50 sticky top-0 z-10">
+                <TableRow className="hover:bg-transparent border-gray-200">
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-400 pl-6 py-4">Data da Planilha</TableHead>
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-400">Status</TableHead>
+                  <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest text-gray-400 pr-6">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isHistoryLoading && historyRuns.length === 0 ? (
                   <TableRow className="hover:bg-transparent border-none">
                     <TableCell colSpan={3} className="text-center py-20">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500/50" />
-                      <p className="text-xs font-bold uppercase tracking-tighter text-white/20">Sincronizando histórico...</p>
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-400" />
+                      <p className="text-xs font-bold uppercase tracking-tighter text-gray-300">Sincronizando histórico...</p>
                     </TableCell>
                   </TableRow>
                 ) : historyRuns.length === 0 ? (
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableCell colSpan={3} className="text-center py-20 text-white/20 font-bold uppercase text-xs tracking-widest">
+                    <TableCell colSpan={3} className="text-center py-20 text-gray-300 font-bold uppercase text-xs tracking-widest">
                       Nenhum registro
                     </TableCell>
                   </TableRow>
@@ -103,22 +101,22 @@ export function PrnHistoryTable({
                   historyRuns.map((run: any) => (
                     <TableRow
                       key={run.id}
-                      className="border-white/5 transition-all hover:bg-white/[0.03] cursor-pointer group"
+                      className="border-gray-200 transition-all hover:bg-gray-50 cursor-pointer group"
                       onClick={() => handleOpenHistory(run)}
                     >
-                      <TableCell className="text-[11px] font-bold text-white/60 pl-6 py-4">
+                      <TableCell className="text-[11px] font-bold text-gray-600 pl-6 py-4">
                         {formatReferenceDate(run.data_referencia)}
                       </TableCell>
                       <TableCell>
                         {run.status === 'success' && (
-                          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold text-[9px] uppercase tracking-tighter px-2 py-0.5">
+                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold text-[9px] uppercase tracking-tighter px-2 py-0.5">
                             Sucesso
                           </Badge>
                         )}
                         {run.status === 'processing' && (
                           <Badge
                             variant="secondary"
-                            className="font-bold text-[9px] uppercase tracking-tighter bg-blue-500/10 text-blue-400 border-blue-500/20 px-2 py-0.5 animate-pulse"
+                            className="font-bold text-[9px] uppercase tracking-tighter bg-blue-100 text-blue-600 border-blue-200 px-2 py-0.5 animate-pulse"
                           >
                             Processando
                           </Badge>
@@ -126,7 +124,7 @@ export function PrnHistoryTable({
                         {run.status === 'error' && (
                           <Badge
                             variant="destructive"
-                            className="font-bold text-[9px] uppercase tracking-tighter bg-red-500/10 text-red-400 border-red-500/20 px-2 py-0.5"
+                            className="font-bold text-[9px] uppercase tracking-tighter bg-red-100 text-red-600 border-red-200 px-2 py-0.5"
                           >
                             Falha
                           </Badge>
@@ -137,7 +135,7 @@ export function PrnHistoryTable({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-blue-500/20 text-white/20 group-hover:text-blue-400 transition-all"
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-blue-100 text-gray-300 group-hover:text-blue-600 transition-all"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleOpenHistory(run)
@@ -149,7 +147,7 @@ export function PrnHistoryTable({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-red-500/20 text-white/20 hover:text-red-400 transition-all"
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all"
                             onClick={(e) => {
                               e.stopPropagation()
                               setRunToDelete(run)
@@ -169,17 +167,17 @@ export function PrnHistoryTable({
       </Card>
 
       <AlertDialog open={!!runToDelete} onOpenChange={(open) => !open && setRunToDelete(null)}>
-        <AlertDialogContent className="bg-[#0f111a] border-white/10 text-white">
+        <AlertDialogContent className="bg-white border-gray-200 text-gray-900">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">Excluir Relatório</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-gray-500">
               Tem certeza que deseja excluir a análise da planilha{' '}
               {runToDelete && formatReferenceDate(runToDelete.data_referencia)}? Esta ação
               não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-white/10 hover:bg-white/5 hover:text-white text-white">
+            <AlertDialogCancel className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
@@ -188,7 +186,7 @@ export function PrnHistoryTable({
                 confirmDelete()
               }}
               disabled={isDeleting}
-              className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+              className="bg-red-600 text-white hover:bg-red-700"
             >
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Excluir'}
             </AlertDialogAction>
