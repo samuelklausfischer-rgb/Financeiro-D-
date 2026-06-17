@@ -137,6 +137,13 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100
 }
 
+// Variação % contra o mês mais recente com dado. Sem histórico → 0%.
+function calcVarPct(atual: number, mar: number, abr: number, mai: number): number {
+  const base = mai > 0 ? mai : abr > 0 ? abr : mar > 0 ? mar : 0
+  if (base <= 0) return 0
+  return Math.round(((atual - base) / base) * 10000) / 100
+}
+
 function numberValue(...values: unknown[]): number {
   const value = values.find(v => v !== undefined && v !== null)
   const amount = Number(value ?? 0)
@@ -162,9 +169,7 @@ function recalculateGroupedRow(row: CockpitRow) {
     : 0
   row.difVsAbr = roundMoney(row.atual - row.abr)
   row.difVsMai = roundMoney(row.atual - row.mai)
-  row.varPct = row.mai > 0
-    ? Math.round(((row.atual - row.mai) / row.mai) * 10000) / 100
-    : (row.atual > 0 ? 100 : 0)
+  row.varPct = calcVarPct(row.atual, row.mar, row.abr, row.mai)
   row.status = calcStatus(row.difVsMai, row.tipoMatch)
   row.fev = roundMoney(row.fev)
   row.mar = roundMoney(row.mar)
@@ -256,7 +261,7 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
 
     const mesesValidos = [mar, abr, mai].filter(v => v > 0)
     const media = mesesValidos.length > 0 ? (mar + abr + mai) / mesesValidos.length : 0
-    const varPct = mai > 0 ? ((atual - mai) / mai) * 100 : (atual > 0 ? 100 : 0)
+    const varPct = calcVarPct(atual, mar, abr, mai)
 
     return {
       unidade,
