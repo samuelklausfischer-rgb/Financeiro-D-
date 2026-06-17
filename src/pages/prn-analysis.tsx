@@ -91,6 +91,7 @@ export default function PrnAnalysis() {
     null,
   )
   const [duplicityAnalysis, setDuplicityAnalysis] = useState<AnalysisRecord | null>(null)
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null)
   const [historyRuns, setHistoryRuns] = useState<any[]>([])
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [formKey, setFormKey] = useState(0)
@@ -116,6 +117,7 @@ export default function PrnAnalysis() {
     setReportData(null)
     setErrorDetails(null)
     setDuplicityAnalysis(null)
+    setCurrentRunId(null)
     setFormKey((k) => k + 1)
   }
 
@@ -226,6 +228,7 @@ export default function PrnAnalysis() {
 
       const response = await submitPrnAnalysisJson(formData)
       serverRunId = response._runId || null
+      if (serverRunId) setCurrentRunId(serverRunId)
 
       if (!response.ok)
         throw new Error(
@@ -316,6 +319,7 @@ export default function PrnAnalysis() {
           parsedModel.type === 'prn_dashboard_payload'
             ? parsedModel
             : parsedModel.reportModel || parsedModel
+        setCurrentRunId(record.id)
         setReportData({ ...payload, meta: { ...runData.meta, data_referencia: runData.data_referencia } })
         setUiState('report')
 
@@ -383,7 +387,7 @@ export default function PrnAnalysis() {
       {uiState === 'error' && <ErrorState error={errorDetails} onReset={handleReset} />}
       {uiState === 'report' && (
         <>
-          <PrnReportView data={reportData} duplicityAnalysis={duplicityAnalysis ?? undefined} />
+          <PrnReportView data={reportData} duplicityAnalysis={duplicityAnalysis ?? undefined} runId={currentRunId ?? undefined} />
 
           {duplicityAnalysis && (
             <div className="mt-16 border-t border-gray-200 pt-12 animate-in fade-in slide-in-from-bottom-6 duration-700">

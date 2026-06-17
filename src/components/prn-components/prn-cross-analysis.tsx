@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { formatCurrency, formatPercentage } from '@/lib/formatters'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,12 +11,22 @@ import {
   ChevronRight,
   Layers,
   Sheet,
+  PencilLine,
+  X,
+  Check,
 } from 'lucide-react'
 import { generateAuditPDF, generateGroupedAuditPDF } from '@/lib/export-pdf'
 import { generateAuditExcel, generateGroupedAuditExcel } from '@/lib/export-excel'
 import { buildCockpitRows, groupDuplicateRows, CockpitRow } from '@/lib/audit-utils'
 import { downloadDailyFile } from '@/services/prn-service'
 import type { AnalysisRecord } from '@/services/analise-duplicidade'
+import {
+  getObservationsByRunId,
+  saveObservation,
+  deleteObservation,
+  makeRowKey,
+  PrnRowObservation,
+} from '@/services/prn-observations'
 
 const UNIT_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   'PRN MATRIZ': { label: 'PRN MATRIZ', bg: 'bg-blue-100 border-blue-200', text: 'text-blue-600' },
@@ -86,6 +96,39 @@ function DeptExpander({ row }: { row: CockpitRow }) {
   )
 }
 
+function daysBetween(dateStrA: string, dateStrB: string): number {
+  const a = new Date(dateStrA).getTime()
+  const b = new Date(dateStrB).getTime()
+  return Math.round((b - a) / 86400000)
+}
+
+function DataRegistroBadge({ dataRegistro, vencimento, referenceDate }: {
+  dataRegistro?: string
+  vencimento?: string
+  referenceDate?: string
+}) {
+  if (!dataRegistro) return null
+
+  const compareDate = vencimento || referenceDate
+  if (!compareDate) return null
+
+  const days = daysBetween(dataRegistro, compareDate)
+  if (days <= 0) return null
+
+  const color =
+    days <= 7
+      ? 'bg-blue-50 text-blue-600 border-blue-200'
+      : days <= 30
+      ? 'bg-amber-50 text-amber-700 border-amber-200'
+      : 'bg-red-50 text-red-600 border-red-200'
+
+  return (
+    <span className={cn('inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap', color)}>
+      Reg. {days}d atrás
+    </span>
+  )
+}
+
 const FILTERS: Array<{ id: string; label: string; color: string }> = [
   { id: 'all', label: 'Todos', color: 'text-gray-700' },
   { id: 'Aumento', label: 'Aumento', color: 'text-red-600' },
@@ -94,7 +137,12 @@ const FILTERS: Array<{ id: string; label: string; color: string }> = [
   { id: 'Igual', label: 'Igual', color: 'text-gray-400' },
 ]
 
-export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis }: { data?: any; fullPayload?: any; duplicityAnalysis?: AnalysisRecord }) {
+export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }: {
+  data?: any
+  fullPayload?: any
+  duplicityAnalysis?: AnalysisRecord
+  runId?: string
+}) {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingGrouped, setIsExportingGrouped] = useState(false)
@@ -104,9 +152,62 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis }: { dat
   const [sortKey, setSortKey] = useState<keyof CockpitRow | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
+  // Observations state
+  const [observations, setObservations] = useState<Record<string, PrnRowObservation>>({})
+  const [obsModal, setObsModal] = useState<{ row: CockpitRow; rowKey: string } | null>(null)
+  const [obsText, setObsText] = useState('')
+  const [obsSaving, setObsSaving] = useState(false)
+
   const dailyStorageName: string | undefined = fullPayload?.meta?.daily_file_storage_name
   const dailyOriginalName: string | undefined =
     fullPayload?.meta?.daily_file_original_name || fullPayload?.daily_filename || fullPayload?.request?.dailyFilename
+  const referenceDate: string | undefined =
+    fullPayload?.referenceDateUsed || fullPayload?.meta?.data_referencia
+
+  // Load observations when runId changes
+  useEffect(() => {
+    if (!runId) return
+    getObservationsByRunId(runId)
+      .then((list) => {
+        const map: Record<string, PrnRowObservation> = {}
+        for (const obs of list) map[obs.row_key] = obs
+        setObservations(map)
+      })
+      .catch(() => {})
+  }, [runId])
+
+  const openObsModal = useCallback((row: CockpitRow) => {
+    const key = makeRowKey(row.unidade, row.favorecido, row.categoria)
+    const existing = observations[key]
+    setObsText(existing?.observation || '')
+    setObsModal({ row, rowKey: key })
+  }, [observations])
+
+  const handleSaveObs = async () => {
+    if (!runId || !obsModal) return
+    setObsSaving(true)
+    try {
+      const existing = observations[obsModal.rowKey]
+      if (!obsText.trim()) {
+        if (existing) {
+          await deleteObservation(existing.id)
+          setObservations((prev) => {
+            const next = { ...prev }
+            delete next[obsModal.rowKey]
+            return next
+          })
+        }
+      } else {
+        const saved = await saveObservation(runId, obsModal.rowKey, obsText.trim(), existing?.id)
+        setObservations((prev) => ({ ...prev, [obsModal.rowKey]: saved }))
+      }
+      setObsModal(null)
+    } catch (err) {
+      console.error('Failed to save observation:', err)
+    } finally {
+      setObsSaving(false)
+    }
+  }
 
   const allRows = useMemo<CockpitRow[]>(() => {
     const byBlock = data?.byBlock || data?.crossAnalysis?.byBlock
@@ -225,6 +326,52 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis }: { dat
 
   return (
     <div className="space-y-6 mt-10 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+      {/* Observation Modal */}
+      {obsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-black text-gray-900 tracking-tight">Observação</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 truncate max-w-[300px]">
+                  {obsModal.row.favorecido}
+                </p>
+              </div>
+              <button onClick={() => setObsModal(null)} className="text-gray-300 hover:text-gray-600 transition-colors mt-0.5">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <textarea
+              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-300"
+              rows={4}
+              placeholder="Descreva a observação para este lançamento..."
+              value={obsText}
+              onChange={(e) => setObsText(e.target.value)}
+              autoFocus
+            />
+            {!runId && (
+              <p className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Observações só podem ser salvas em análises com histórico registrado.
+              </p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setObsModal(null)} className="rounded-xl border-gray-200 text-gray-500">
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveObs}
+                disabled={obsSaving || !runId}
+                className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold"
+              >
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                {obsSaving ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4 border-b border-gray-100 pb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
           <div className="space-y-2">
@@ -376,61 +523,95 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis }: { dat
                         <SortTh label="Média" field="media" align="right" />
                         <SortTh label="Atual" field="atual" align="right" />
                         <SortTh label="Var %" field="varPct" align="right" />
+                        <th className="px-3 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-center whitespace-nowrap w-8">OBS</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {blockRows.map((row, i) => (
-                        <tr
-                          key={i}
-                          className={cn(
-                            'border-b border-gray-100 transition-colors hover:bg-gray-50',
-                            i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50',
-                          )}
-                        >
-                          <td className="px-3 py-3 min-w-[160px]">
-                            <DeptExpander row={row} />
-                          </td>
+                      {blockRows.map((row, i) => {
+                        const rowKey = makeRowKey(row.unidade, row.favorecido, row.categoria)
+                        const hasObs = !!observations[rowKey]
 
-                          <td className="px-3 py-3 whitespace-nowrap">
-                            {row.categoria ? (
-                              <Badge className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border bg-purple-100 text-purple-600 border-purple-200 max-w-[160px] truncate">
-                                {row.categoria}
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-300">—</span>
+                        return (
+                          <tr
+                            key={i}
+                            className={cn(
+                              'border-b border-gray-100 transition-colors hover:bg-gray-50',
+                              i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50',
                             )}
-                          </td>
+                          >
+                            <td className="px-3 py-3 min-w-[160px]">
+                              <div className="flex flex-col gap-1">
+                                <DeptExpander row={row} />
+                                <DataRegistroBadge
+                                  dataRegistro={row.dataRegistro}
+                                  vencimento={row.vencimento}
+                                  referenceDate={referenceDate}
+                                />
+                                {hasObs && (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded w-fit">
+                                    <PencilLine className="h-2.5 w-2.5" />
+                                    Obs. salva
+                                  </span>
+                                )}
+                              </div>
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.mar} />
-                          </td>
+                            <td className="px-3 py-3 whitespace-nowrap">
+                              {row.categoria ? (
+                                <Badge className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border bg-purple-100 text-purple-600 border-purple-200 max-w-[160px] truncate">
+                                  {row.categoria}
+                                </Badge>
+                              ) : (
+                                <span className="text-gray-300">—</span>
+                              )}
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.abr} />
-                          </td>
+                            <td className="px-3 py-3 text-right">
+                              <MoneyCell value={row.mar} />
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.mai} />
-                          </td>
+                            <td className="px-3 py-3 text-right">
+                              <MoneyCell value={row.abr} />
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.media} />
-                          </td>
+                            <td className="px-3 py-3 text-right">
+                              <MoneyCell value={row.mai} />
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <MoneyCell value={row.atual} highlight />
-                          </td>
+                            <td className="px-3 py-3 text-right">
+                              <MoneyCell value={row.media} />
+                            </td>
 
-                          <td className="px-3 py-3 text-right">
-                            <span className={cn(
-                              'font-mono text-xs font-bold tabular-nums',
-                              row.varPct > 0 ? 'text-red-600' : row.varPct < 0 ? 'text-emerald-600' : 'text-gray-300'
-                            )}>
-                              {row.varPct !== 0 ? formatPercentage(row.varPct) : '—'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                            <td className="px-3 py-3 text-right">
+                              <MoneyCell value={row.atual} highlight />
+                            </td>
+
+                            <td className="px-3 py-3 text-right">
+                              <span className={cn(
+                                'font-mono text-xs font-bold tabular-nums',
+                                row.varPct > 0 ? 'text-red-600' : row.varPct < 0 ? 'text-emerald-600' : 'text-gray-300'
+                              )}>
+                                {row.varPct !== 0 ? formatPercentage(row.varPct) : '—'}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-3 text-center">
+                              <button
+                                onClick={() => openObsModal(row)}
+                                title={hasObs ? 'Editar observação' : 'Adicionar observação'}
+                                className={cn(
+                                  'p-1 rounded-lg transition-colors',
+                                  hasObs
+                                    ? 'text-violet-500 hover:text-violet-700 hover:bg-violet-50'
+                                    : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100',
+                                )}
+                              >
+                                <PencilLine className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

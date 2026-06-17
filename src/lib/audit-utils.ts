@@ -85,6 +85,8 @@ export interface CockpitRow {
   departamentos: Array<{ dept: string; valor: number }>
   media: number
   varPct: number
+  dataRegistro?: string
+  vencimento?: string
   _raw?: any
 }
 
@@ -251,6 +253,8 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
       departamentos,
       media: Math.round(media * 100) / 100,
       varPct: Math.round(varPct * 100) / 100,
+      dataRegistro: row.dataRegistro || row.data_registro || undefined,
+      vencimento: row.vencimento || undefined,
       _raw: row,
     }
   })

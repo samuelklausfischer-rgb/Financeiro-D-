@@ -3,7 +3,7 @@ import { FileJson, AlertCircle } from 'lucide-react'
 import { PrnCrossAnalysis } from './prn-cross-analysis'
 import type { AnalysisRecord } from '@/services/analise-duplicidade'
 
-export function PrnReportView({ data, duplicityAnalysis }: { data: any; duplicityAnalysis?: AnalysisRecord }) {
+export function PrnReportView({ data, duplicityAnalysis, runId }: { data: any; duplicityAnalysis?: AnalysisRecord; runId?: string }) {
   if (data?.type === 'legacy_html') {
     return (
       <Card className="p-8 text-center bg-white border-gray-200 shadow-sm">
@@ -34,7 +34,7 @@ export function PrnReportView({ data, duplicityAnalysis }: { data: any; duplicit
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <PrnCrossAnalysis data={crossAnalysis} fullPayload={data} duplicityAnalysis={duplicityAnalysis} />
+      <PrnCrossAnalysis data={crossAnalysis} fullPayload={data} duplicityAnalysis={duplicityAnalysis} runId={runId} />
     </div>
   )
 }
