@@ -95,6 +95,28 @@ export function ns(s: unknown): string {
   return String(s).trim().toUpperCase().replace(/\s+/g, ' ')
 }
 
+// Normaliza data para DD/MM/YYYY independente do formato de entrada
+function toDisplayDate(val: unknown): string | undefined {
+  if (!val) return undefined
+  const s = String(val).trim()
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y, m, d] = s.substring(0, 10).split('-')
+    return `${d}/${m}/${y}`
+  }
+  const num = Number(s)
+  if (!isNaN(num) && num > 20000 && num < 60000) {
+    const dt = new Date((num - 25569) * 86400 * 1000)
+    return `${String(dt.getUTCDate()).padStart(2, '0')}/${String(dt.getUTCMonth() + 1).padStart(2, '0')}/${dt.getUTCFullYear()}`
+  }
+  return s || undefined
+}
+
+// Remove tudo que não é letra/número para criar chave de deduplicação robusta
+function normalizeKey(s: string): string {
+  return s.replace(/[^A-Z0-9]/g, '')
+}
+
 export function catMatch(curCat: string, histCat: string): boolean {
   if (curCat === histCat) return true
   if (curCat.includes('HONOR') && histCat.includes('HONOR')) {
@@ -253,8 +275,8 @@ export function buildCockpitRows(blockKey: string, rows: any[]): CockpitRow[] {
       departamentos,
       media: Math.round(media * 100) / 100,
       varPct: Math.round(varPct * 100) / 100,
-      dataRegistro: row.dataRegistro || row.data_registro || undefined,
-      vencimento: row.vencimento || undefined,
+      dataRegistro: toDisplayDate(row.dataRegistro || row.data_registro),
+      vencimento: toDisplayDate(row.vencimento),
       _raw: row,
     }
   })
@@ -264,7 +286,7 @@ export function groupRowsConsolidated(allRows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of groupDuplicateRows(allRows)) {
-    const key = `${row.favorecido}|||${row.categoria}`
+    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
     if (!map.has(key)) {
       map.set(key, {
         unidade: 'CONSOLIDADO',
@@ -310,7 +332,7 @@ export function groupRowsByUnitConsolidated(rows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of rows) {
-    const key = `${row.favorecido}|||${row.categoria}`
+    const key = `${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
     if (!map.has(key)) {
       map.set(key, { ...row, departamentos: [], qtdDepartamentos: 0 })
     } else {
@@ -332,7 +354,7 @@ export function groupDuplicateRows(rows: CockpitRow[]): CockpitRow[] {
   const map = new Map<string, CockpitRow>()
 
   for (const row of rows) {
-    const key = `${row.unidade}|||${row.favorecido}|||${row.categoria}`
+    const key = `${normalizeKey(row.unidade)}|||${normalizeKey(row.favorecido)}|||${normalizeKey(row.categoria)}`
     if (!map.has(key)) {
       map.set(key, { ...row, departamentos: [...row.departamentos] })
     } else {

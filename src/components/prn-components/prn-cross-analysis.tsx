@@ -96,9 +96,18 @@ function DeptExpander({ row }: { row: CockpitRow }) {
   )
 }
 
+function parseDate(s: string): number {
+  if (!s) return NaN
+  // DD/MM/YYYY
+  const p = s.split('/')
+  if (p.length === 3 && p[2].length === 4) return new Date(+p[2], +p[1] - 1, +p[0]).getTime()
+  // ISO YYYY-MM-DD
+  return new Date(s).getTime()
+}
+
 function daysBetween(dateStrA: string, dateStrB: string): number {
-  const a = new Date(dateStrA).getTime()
-  const b = new Date(dateStrB).getTime()
+  const a = parseDate(dateStrA)
+  const b = parseDate(dateStrB)
   return Math.round((b - a) / 86400000)
 }
 
