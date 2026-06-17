@@ -4,14 +4,15 @@ import { buildCockpitRows, groupDuplicateRows, groupRowsByUnitConsolidated } fro
 import type { AnalysisRecord } from '@/services/analise-duplicidade'
 
 const TABLE_HEADERS = [
-  'Favorecido', 
-  'Categoria', 
-  'Mar', 
-  'Abr', 
+  'Favorecido',
+  'Categoria',
+  'Data Reg.',
+  'Mar',
+  'Abr',
   'Maio',
-  'Atual', 
-  'Var %', 
-  'OBS do Financeiro'
+  'Atual',
+  'Var %',
+  'OBS do Financeiro',
 ]
 
 // Cores de Fundo para CABEÇALHOS das Unidades (Sólidas)
@@ -220,7 +221,7 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
     // BARRA DA UNIDADE
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:H${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:I${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -231,12 +232,12 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
 
     for (const row of grouped) {
       isZebra = !isZebra
-      // Usamos a cor da unidade mas podemos alternar um brilho sutil se necessário
-      const rowColor = isZebra ? unitBg : 'FFFFFFFF' 
+      const rowColor = isZebra ? unitBg : 'FFFFFFFF'
 
       const mainRow = worksheet.addRow([
         row.favorecido,
         row.categoria,
+        row.dataRegistro || '—',
         formatBRL(row.mar),
         formatBRL(row.abr),
         formatBRL(row.mai),
@@ -248,15 +249,14 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
       mainRow.eachCell((cell, colNumber) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
         cell.border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
-        
-        // Mantém o destaque visual da variação mesmo sem exibir a coluna Status.
-        if (colNumber === 7) {
+
+        if (colNumber === 8) {
           if (row.status === 'Aumento') cell.font = { color: { argb: 'FFEF4444' }, bold: true }
           if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
           if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
         }
 
-        if (colNumber === 8) {
+        if (colNumber === 9) {
           styleFinanceNoteCell(cell)
         }
       })
@@ -265,18 +265,18 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
       if (Array.isArray(row.departamentos)) {
         for (const dept of row.departamentos) {
           const deptRow = worksheet.addRow([
-            `    └─ ${dept.dept}`, 
-            '', '', '', '',
-            formatBRL(dept.valor), 
+            `    └─ ${dept.dept}`,
+            '', '', '', '', '',
+            formatBRL(dept.valor),
             '', ''
           ])
-      deptRow.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
-        cell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
-        if (cell.col === 8) {
-          styleFinanceNoteCell(cell)
-        }
-      })
+          deptRow.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
+            cell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
+            if (cell.col === 9) {
+              styleFinanceNoteCell(cell)
+            }
+          })
         }
       }
     }
@@ -291,8 +291,8 @@ export async function generateAuditExcel(data: any, duplicityData?: AnalysisReco
 
   // Ajustes Finais
   worksheet.columns = [
-    { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 28 }
+    { width: 45 }, { width: 30 }, { width: 14 }, { width: 12 }, { width: 12 },
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 28 }
   ]
 
   if (duplicityData) {
@@ -330,7 +330,7 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
     // BARRA DA UNIDADE (Identidade Visual)
     const unitRow = worksheet.addRow([unitLabel])
     styleUnitHeader(unitRow, unitLabel)
-    worksheet.mergeCells(`A${unitRow.number}:H${unitRow.number}`)
+    worksheet.mergeCells(`A${unitRow.number}:I${unitRow.number}`)
 
     // CABEÇALHO DA TABELA
     const headerRow = worksheet.addRow(TABLE_HEADERS)
@@ -346,6 +346,7 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
       const r = worksheet.addRow([
         row.favorecido,
         row.categoria,
+        row.dataRegistro || '—',
         formatBRL(row.mar),
         formatBRL(row.abr),
         formatBRL(row.mai),
@@ -353,19 +354,18 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
         `${row.varPct?.toFixed(2)}%`,
         ''
       ])
-      
+
       r.eachCell((cell, colNum) => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowColor } }
         cell.border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
-        
-        // Mantém o destaque visual da variação mesmo sem exibir a coluna Status.
-        if (colNum === 7) {
-           if (row.status === 'Aumento') cell.font = { color: { argb: 'FFEF4444' }, bold: true }
-           if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
-           if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
-        }
 
         if (colNum === 8) {
+          if (row.status === 'Aumento') cell.font = { color: { argb: 'FFEF4444' }, bold: true }
+          if (row.status === 'Queda') cell.font = { color: { argb: 'FF10B981' }, bold: true }
+          if (row.status === 'Novo') cell.font = { color: { argb: 'FF3B82F6' }, bold: true }
+        }
+
+        if (colNum === 9) {
           styleFinanceNoteCell(cell)
         }
       })
@@ -380,8 +380,8 @@ export async function generateGroupedAuditExcel(data: any, duplicityData?: Analy
   }
 
   worksheet.columns = [
-    { width: 45 }, { width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-    { width: 12 }, { width: 12 }, { width: 28 }
+    { width: 45 }, { width: 30 }, { width: 14 }, { width: 12 }, { width: 12 },
+    { width: 12 }, { width: 12 }, { width: 12 }, { width: 28 }
   ]
   
   if (duplicityData) {

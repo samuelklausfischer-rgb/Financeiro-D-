@@ -517,6 +517,7 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
                       <tr>
                         <SortTh label="Favorecido" field="favorecido" />
                         <SortTh label="Categoria" field="categoria" />
+                        <SortTh label="Data Reg." field="dataRegistro" align="center" />
                         <SortTh label="Mar" field="mar" align="right" />
                         <SortTh label="Abr" field="abr" align="right" />
                         <SortTh label="Maio" field="mai" align="right" />
@@ -539,14 +540,9 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
                               i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50',
                             )}
                           >
-                            <td className="px-3 py-3 min-w-[160px]">
+                            <td className="px-3 py-3 min-w-[160px] whitespace-nowrap">
                               <div className="flex flex-col gap-1">
                                 <DeptExpander row={row} />
-                                <DataRegistroBadge
-                                  dataRegistro={row.dataRegistro}
-                                  vencimento={row.vencimento}
-                                  referenceDate={referenceDate}
-                                />
                                 {hasObs && (
                                   <span className="inline-flex items-center gap-1 text-[9px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded w-fit">
                                     <PencilLine className="h-2.5 w-2.5" />
@@ -566,27 +562,42 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
                               )}
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-center whitespace-nowrap">
+                              {row.dataRegistro ? (
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span className="font-mono text-[10px] text-gray-500">{row.dataRegistro}</span>
+                                  <DataRegistroBadge
+                                    dataRegistro={row.dataRegistro}
+                                    vencimento={row.vencimento}
+                                    referenceDate={referenceDate}
+                                  />
+                                </div>
+                              ) : (
+                                <span className="text-gray-300">—</span>
+                              )}
+                            </td>
+
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <MoneyCell value={row.mar} />
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <MoneyCell value={row.abr} />
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <MoneyCell value={row.mai} />
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <MoneyCell value={row.media} />
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <MoneyCell value={row.atual} highlight />
                             </td>
 
-                            <td className="px-3 py-3 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <span className={cn(
                                 'font-mono text-xs font-bold tabular-nums',
                                 row.varPct > 0 ? 'text-red-600' : row.varPct < 0 ? 'text-emerald-600' : 'text-gray-300'
@@ -595,7 +606,7 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
                               </span>
                             </td>
 
-                            <td className="px-3 py-3 text-center">
+                            <td className="px-3 py-3 text-center whitespace-nowrap">
                               <button
                                 onClick={() => openObsModal(row)}
                                 title={hasObs ? 'Editar observação' : 'Adicionar observação'}

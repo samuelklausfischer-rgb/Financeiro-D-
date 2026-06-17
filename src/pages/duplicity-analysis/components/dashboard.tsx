@@ -236,14 +236,6 @@ export function ResultsDashboard({ analysis: initialAnalysis }: { analysis: Anal
   const duplicateCount = useMemo(() => result_json?.duplicateGroups?.length || 0, [result_json])
   const manualCount = useMemo(() => (result_json?.manualReviewGroups?.length || 0) + (result_json?.nameRepeatManualGroups?.length || 0), [result_json])
 
-  const partialRecords = useMemo(() => {
-    return (result_json?.partialStructureRecords || []).filter((r: any) =>
-      r.vencimento && r.vencimento !== '-' && String(r.vencimento).trim() !== ''
-    )
-  }, [result_json])
-
-  const partialCount = partialRecords.length
-
   const handleExportPDF = () => {
     if (!result_json) return
 
@@ -317,31 +309,6 @@ export function ResultsDashboard({ analysis: initialAnalysis }: { analysis: Anal
     renderGroups(result_json.duplicateGroups, 'Duplicidades Confirmadas (Risco Crítico)', [220, 38, 38])
     renderGroups(result_json.manualReviewGroups, 'Revisão Necessária - Mesmo Departamento', [202, 138, 4])
     renderGroups(result_json.nameRepeatManualGroups, 'Revisão Necessária - Nome Repetido', [202, 138, 4])
-
-    if (partialRecords && partialRecords.length > 0) {
-      if (startY > 170) { doc.addPage(); startY = 20; }
-
-      doc.setFontSize(12)
-      doc.setTextColor(37, 99, 235)
-      doc.text('Monitoramento - Estrutura Parcial', 14, startY)
-
-      autoTable(doc, {
-        startY: startY + 4,
-        head: [['Linha', 'Unidade', 'Nome', 'Departamento', 'Valor', 'Vencimento', 'Parcela', 'CPF/CNPJ']],
-        body: partialRecords.map((r: any) => [
-          r.linha_origem ?? r.linhaOrigem ?? '-',
-          r.unidade ?? '-',
-          r.nome_original ?? r.nomeOriginal ?? '-',
-          r.departamento_original ?? r.departamentoOriginal ?? '-',
-          formatCurrency(r.valor_normalizado ?? r.valorNormalizado),
-          formatDate(r.vencimento),
-          r.parcela || '-',
-          (r.cpf_cnpj ?? r.cpfCnpj) || '-'
-        ]),
-        headStyles: { fillColor: [37, 99, 235] },
-        styles: { fontSize: 8 }
-      })
-    }
 
     const safeName = analysis.file_name.replace(/[^a-zA-Z0-9]/g, '_')
     doc.save(`Analise_Duplicidade_${safeName}.pdf`)
@@ -429,9 +396,6 @@ export function ResultsDashboard({ analysis: initialAnalysis }: { analysis: Anal
               </div>
             </ZoneWrapper>
 
-            <ZoneWrapper theme="blue" icon={Eye} title="Estrutura Parcial" description="Monitoramento: Registros que apresentam semelhanças parciais (somente itens com vencimento)." count={partialCount}>
-              <DataTable records={partialRecords} variant="blue" />
-            </ZoneWrapper>
           </div>
         )}
       </CardContent>

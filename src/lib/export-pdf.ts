@@ -220,7 +220,7 @@ export async function generateAuditPDF(data: any, duplicityData?: AnalysisRecord
     doc.text(`${blockRows.length} registros encontrados`, 14, currentY)
     currentY += 6
 
-    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Atual', 'Var %']
+    const tableHead = ['Favorecido', 'Categoria', 'Data Reg.', 'Mar', 'Abr', 'Maio', 'Atual', 'Var %']
     const tableRows: any[] = []
     let groupIndex = 0
 
@@ -233,9 +233,10 @@ export async function generateAuditPDF(data: any, duplicityData?: AnalysisRecord
         values: [
           row.favorecido || 'Desconhecido',
           row.categoria || 'Indefinido',
-          formatCurrency(row.jan || 0),
-          formatCurrency(row.fev || 0),
+          row.dataRegistro || '—',
           formatCurrency(row.mar || 0),
+          formatCurrency(row.abr || 0),
+          formatCurrency(row.mai || 0),
           formatCurrency(row.atual || 0),
           formatPercentage(row.varPct || 0),
         ]
@@ -248,7 +249,7 @@ export async function generateAuditPDF(data: any, duplicityData?: AnalysisRecord
             groupIndex: currentGroupIndex,
             values: [
               `    ${dept.dept || 'Sem depto'}`,
-              '', '', '', '',
+              '', '', '', '', '',
               formatCurrency(dept.valor || 0),
               '',
             ]
@@ -264,10 +265,11 @@ export async function generateAuditPDF(data: any, duplicityData?: AnalysisRecord
       theme: 'grid',
       headStyles: { fillColor: color },
       columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 30 },
-        5: { halign: 'right', fontStyle: 'bold' },
-        6: { halign: 'right' }
+        0: { cellWidth: 48 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 20, halign: 'center' },
+        6: { halign: 'right', fontStyle: 'bold' },
+        7: { halign: 'right' }
       },
       didParseCell: (data: any) => {
         const rowMeta = tableRows[data.row.index]
@@ -284,7 +286,7 @@ export async function generateAuditPDF(data: any, duplicityData?: AnalysisRecord
           }
         }
 
-        if (data.section === 'body' && !rowMeta?.isDetail && data.column.index === 6) {
+        if (data.section === 'body' && !rowMeta?.isDetail && data.column.index === 7) {
           const valStr = data.cell.text[0].replace('%', '').replace(',', '.')
           const val = parseFloat(valStr)
           if (Math.abs(val) > 25) {
@@ -375,14 +377,15 @@ export async function generateGroupedAuditPDF(data: any, duplicityData?: Analysi
     doc.text(`${groupedRows.length} registros consolidados`, 14, currentY)
     currentY += 6
 
-    const tableHead = ['Favorecido', 'Categoria', 'Jan', 'Fev', 'Mar', 'Atual', 'Var %']
+    const tableHead = ['Favorecido', 'Categoria', 'Data Reg.', 'Mar', 'Abr', 'Maio', 'Atual', 'Var %']
     const tableRows = groupedRows.map(row => ({
       values: [
         row.favorecido || 'Desconhecido',
         row.categoria || 'Indefinido',
-        formatCurrency(row.jan || 0),
-        formatCurrency(row.fev || 0),
+        row.dataRegistro || '—',
         formatCurrency(row.mar || 0),
+        formatCurrency(row.abr || 0),
+        formatCurrency(row.mai || 0),
         formatCurrency(row.atual || 0),
         formatPercentage(row.varPct || 0),
       ]
@@ -395,10 +398,11 @@ export async function generateGroupedAuditPDF(data: any, duplicityData?: Analysi
       theme: 'grid',
       headStyles: { fillColor: unit.color },
       columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 30 },
-        5: { halign: 'right', fontStyle: 'bold' },
-        6: { halign: 'right' }
+        0: { cellWidth: 48 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 20, halign: 'center' },
+        6: { halign: 'right', fontStyle: 'bold' },
+        7: { halign: 'right' }
       },
       didParseCell: (data: any) => {
         if (data.section === 'body') {
@@ -407,7 +411,7 @@ export async function generateGroupedAuditPDF(data: any, duplicityData?: Analysi
           data.cell.styles.textColor = [30, 30, 30]
           data.cell.styles.fontSize = 9
 
-          if (data.column.index === 6) {
+          if (data.column.index === 7) {
             const valStr = data.cell.text[0].replace('%', '').replace(',', '.')
             const val = parseFloat(valStr)
             if (Math.abs(val) > 25) {
