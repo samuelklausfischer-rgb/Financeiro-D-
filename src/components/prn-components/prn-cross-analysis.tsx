@@ -7,6 +7,8 @@ import {
   History,
   Filter,
   FileText,
+  ChevronDown,
+  ChevronRight,
   Layers,
   Sheet,
   PencilLine,
@@ -62,15 +64,33 @@ function MoneyCell({ value, highlight = false }: { value: number; highlight?: bo
   )
 }
 
-function FavorecidoCell({ row }: { row: CockpitRow }) {
-  const dept = row.departamentos[0]
+function DeptExpander({ row }: { row: CockpitRow }) {
+  const [open, setOpen] = useState(false)
+  const hasDepts = row.departamentos.length > 0
+
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="font-bold text-gray-800 text-xs truncate max-w-[200px]">{row.favorecido}</span>
-      {dept && (
-        <span className="text-[10px] text-gray-400 uppercase truncate max-w-[200px] pl-1 leading-tight">
-          {dept.dept}
-        </span>
+      <div className="flex items-center gap-1">
+        {hasDepts && (
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-gray-300 hover:text-gray-600 transition-colors"
+            aria-label="Expandir departamentos"
+          >
+            {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </button>
+        )}
+        <span className="font-bold text-gray-800 text-xs truncate max-w-[180px]">{row.favorecido}</span>
+      </div>
+      {open && hasDepts && (
+        <div className="ml-4 space-y-0.5 border-l border-gray-200 pl-2 mt-1">
+          {row.departamentos.map((d, i) => (
+            <div key={i} className="flex items-center justify-between gap-3 text-[10px]">
+              <span className="text-gray-400 uppercase truncate max-w-[150px]">{d.dept}</span>
+              <span className="font-mono text-gray-500">{formatCurrency(d.valor)}</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -531,7 +551,7 @@ export function PrnCrossAnalysis({ data, fullPayload, duplicityAnalysis, runId }
                           >
                             <td className="px-3 py-3 min-w-[160px] whitespace-nowrap">
                               <div className="flex flex-col gap-1">
-                                <FavorecidoCell row={row} />
+                                <DeptExpander row={row} />
                                 {hasObs && (
                                   <span className="inline-flex items-center gap-1 text-[9px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded w-fit">
                                     <PencilLine className="h-2.5 w-2.5" />
